@@ -32,7 +32,7 @@ public class PredictionPipelineJob implements Job, PredictionPipelineListener {
 	private final static String SEPARATOR = File.separator;
 	private final static Logger LOGGER = Logger.getLogger(PredictionPipelineJob.class.getName());
 	private final static Long MAX_AGE = 3 * 2592000000L; // 3 months
-	private final static Integer TRAINING_CYCLES = 1;
+	private final static Integer TRAINING_CYCLES = 100;
 	
 	@Override
 	public void execute(JobExecutionContext ctx) throws JobExecutionException {
