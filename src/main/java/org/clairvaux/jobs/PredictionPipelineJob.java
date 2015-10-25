@@ -45,6 +45,10 @@ public class PredictionPipelineJob implements Job, PredictionPipelineListener {
 		Set<String> modelBaseNames = new HashSet<String>();
 		File modelDir = new File(root, "models");
 		File[] modelFiles = modelDir.listFiles();
+		if (modelFiles == null) {
+			return;
+		}
+		
 		for (File file : modelFiles) {
 			modelBaseNames.add(FileUtils.stripExtension(file.getName()));
 		}
@@ -52,6 +56,10 @@ public class PredictionPipelineJob implements Job, PredictionPipelineListener {
 		File uploadDir = new File(root, "uploads");
 		File csvFile = null;
 		File[] uploadFiles = uploadDir.listFiles();
+		if (uploadFiles == null) {
+			return;
+		}
+		
 		for (File file : uploadFiles) {
 			String fileName = file.getName();
 			String baseName = FileUtils.stripExtension(fileName);
