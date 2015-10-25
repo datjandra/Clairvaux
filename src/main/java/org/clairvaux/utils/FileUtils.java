@@ -1,0 +1,57 @@
+package org.clairvaux.utils;
+
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+public class FileUtils {
+
+	private FileUtils() {}
+	
+	public static boolean purgeable(File file, Date date, Long maxAge) {
+		Long age = date.getTime() - file.lastModified();
+        return (age > maxAge);
+    }
+	
+	public static String stripExtension(String fileName) {
+        int dotPosition = fileName.lastIndexOf('.');
+        if (dotPosition == -1) {
+            return fileName;
+        }
+        return fileName.substring(0, dotPosition);
+    }
+	
+	public static String extractBaseName(String fileName) {
+		return stripExtension(fileName.substring(fileName.lastIndexOf('/')+1));
+	}
+	
+	public static List<String> getFileNames(String dirName) {
+		List<String> fileNames = new ArrayList<String>();
+		File fileDir = new File(dirName);
+		File[] files = fileDir.listFiles();
+		if (files != null) {
+			for (File file : files) {
+				fileNames.add(file.getName());
+			}
+		}
+		return fileNames;
+	}
+	
+	public static String constructUrl(HttpServletRequest request, String paramName, String fileName) 
+			throws UnsupportedEncodingException {
+		String scheme = request.getScheme();
+		String serverName = request.getServerName();
+		int serverPort = request.getServerPort();
+		String contextPath = request.getContextPath();
+		String baseName = extractBaseName(fileName);
+		String modelLink = 
+				String.format("%s://%s:%d%s/view?%s=%s", scheme, serverName, 
+						serverPort, contextPath, paramName, URLEncoder.encode(baseName, "UTF-8"));
+		return modelLink;
+	}
+}

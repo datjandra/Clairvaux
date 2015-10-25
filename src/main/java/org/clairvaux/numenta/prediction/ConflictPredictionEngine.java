@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.clairvaux.jobs.PredictionPipelineListener;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -103,6 +102,10 @@ public class ConflictPredictionEngine {
 
 	public void setListener(PredictionPipelineListener listener) {
 		this.listener = listener;
+	}
+	
+	public List<Map<String,Object>> getInputList() {
+		return inputList;
 	}
 
 	private Network createNetwork() {

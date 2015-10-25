@@ -1,8 +1,8 @@
 package org.clairvaux.numenta.prediction;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -105,7 +105,7 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 		writer.close();
 	}
 	
-	public void dumpJson(String jsonFile) throws JsonGenerationException, JsonMappingException, IOException {
+	public void dumpJsonGraph(Writer writer) throws JsonGenerationException, JsonMappingException, IOException {
 		GraphModel graphModel = new GraphModel();
 		Set<Entry<Pair<String,String>, Integer>> entries = mutualCounts.entrySet();
 		for (Entry<Pair<String,String>, Integer> entry : entries) {
@@ -118,6 +118,6 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 		SimpleModule module = new SimpleModule();
 		module.addSerializer(GraphModel.class, new GraphModelJsonSerializer());
 		mapper.registerModule(module);
-		mapper.writerWithDefaultPrettyPrinter().writeValue(new File(jsonFile), graphModel);
+		mapper.writerWithDefaultPrettyPrinter().writeValue(writer, graphModel);
 	}
 }

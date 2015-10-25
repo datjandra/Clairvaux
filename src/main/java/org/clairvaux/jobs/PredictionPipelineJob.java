@@ -1,81 +1,91 @@
 package org.clairvaux.jobs;
 
 import java.io.File;
-import java.io.FileFilter;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.clairvaux.data.RealtimeDataFetcher;
 import org.clairvaux.numenta.prediction.AggregateSubscriber;
 import org.clairvaux.numenta.prediction.ConflictPredictionEngine;
+import org.clairvaux.numenta.prediction.PredictionPipelineListener;
+import org.clairvaux.utils.FileUtils;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+@DisallowConcurrentExecution
 public class PredictionPipelineJob implements Job, PredictionPipelineListener {
 
-	private String rootPath;
+	private String root;
+	private String workingFile;
 	private ConflictPredictionEngine predictionEngine;
 	private AggregateSubscriber subscriber;
+	
+	private final static String SEPARATOR = File.separator;
 	private final static Logger LOGGER = Logger.getLogger(PredictionPipelineJob.class.getName());
+	private final static Long MAX_AGE = 3 * 2592000000L; // 3 months
+	private final static Integer TRAINING_CYCLES = 1;
 	
 	@Override
 	public void execute(JobExecutionContext ctx) throws JobExecutionException {
+		LOGGER.log(Level.INFO, "execute()");
+		resetAll();
+		purgeOldFiles();
 		JobDataMap map = ctx.getJobDetail().getJobDataMap();
-		rootPath = map.getString("path") + File.separator + "data";
-		try {
-			RealtimeDataFetcher.fetch(".", this, "MACOSX");
-		} catch (IOException e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+		root = String.format("%s%sdata", map.getString("path"), SEPARATOR);
+		
+		Set<String> modelBaseNames = new HashSet<String>();
+		File modelDir = new File(root, "models");
+		File[] modelFiles = modelDir.listFiles();
+		for (File file : modelFiles) {
+			modelBaseNames.add(FileUtils.stripExtension(file.getName()));
 		}
-	}
-
-	@Override
-	public void onDataRefreshed(String archiveUrl) {
-		LOGGER.log(Level.INFO, "Found new archive: " + archiveUrl);
-	}
-
-	@Override
-	public void onDataCached(List<String> fileNames) {
-		LOGGER.log(Level.INFO, String.format("Archived %d files", fileNames.size()));
-		File dataDir = new File(rootPath);
-		if (dataDir.isDirectory()) {
-			File[] csvFiles = dataDir.listFiles(new FileFilter() {
-				@Override
-				public boolean accept(File file) {
-					return file.getName().endsWith(".csv");
-				}
-			});
-			
-			Set<File> deleteSet = new HashSet<File>();
-			File dataFile = null;
-			for (File csvFile : csvFiles) {
-				deleteSet.add(csvFile);
-				if (dataFile == null) {
-					dataFile = csvFile;
-				} else if (dataFile.lastModified() < csvFile.lastModified()) {
-					dataFile = csvFile;
-				}
-			}
-			deleteSet.remove(dataFile);
-			
-			for (File file : deleteSet) {
-				file.delete();
+		
+		File uploadDir = new File(root, "uploads");
+		File csvFile = null;
+		File[] uploadFiles = uploadDir.listFiles();
+		for (File file : uploadFiles) {
+			String fileName = file.getName();
+			String baseName = FileUtils.stripExtension(fileName);
+			if (modelBaseNames.contains(baseName)) {
+				continue;
 			}
 			
+			if (fileName.endsWith(".csv")) {
+				workingFile = baseName;
+				csvFile = file;
+				break;
+			}
+		}
+		
+		if (csvFile != null) {
+			predictionEngine = 
+					new ConflictPredictionEngine(csvFile.getAbsolutePath(), TRAINING_CYCLES);
+			predictionEngine.setListener(this);
 			try {
-				predictionEngine = new ConflictPredictionEngine(dataFile.getAbsolutePath(), null);
-				predictionEngine.setListener(this);
 				predictionEngine.startTraining();
 			} catch (IOException e) {
 				LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			}
 		}
+	}
+
+	@Override
+	public void onDataRefreshed(String archiveUrl) {
+		LOGGER.log(Level.INFO, "onDataRefreshed");
+	}
+
+	@Override
+	public void onDataCached(List<String> fileNames) {
+		LOGGER.log(Level.INFO, "onDataCached");
 	}
 
 	@Override
@@ -91,6 +101,10 @@ public class PredictionPipelineJob implements Job, PredictionPipelineListener {
 	@Override
 	public void onStopTraining() {
 		LOGGER.log(Level.INFO, "onStopTraining()");
+		if (workingFile == null || workingFile.isEmpty()) {
+			return;
+		}
+		
 		subscriber = new AggregateSubscriber("EVENT_TYPE", new String[]{
 		    	"EVENT_DATE",	
 		    	"INTERACTION"
@@ -106,11 +120,51 @@ public class PredictionPipelineJob implements Job, PredictionPipelineListener {
 	@Override
 	public void onStopPrediction() {
 		LOGGER.log(Level.INFO, "onStopPrediction()");
-		String outputFile = rootPath + File.separator + "graph.json";
+		if (workingFile == null || workingFile.isEmpty()) {
+			return;
+		}
+		
+		if (subscriber == null) {
+			return;
+		}
+		
+		File modelDir = new File(root, "models");
+		File outputFile = new File(modelDir, String.format("%s.json", workingFile));
 		try {
-			subscriber.dumpJson(outputFile);
+			Writer writer = new FileWriter(outputFile);
+			subscriber.dumpJsonGraph(writer);
+			writer.close();
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+		}
+	}
+	
+	private void resetAll() {
+		workingFile = null;
+		predictionEngine = null;
+		subscriber = null;
+	}
+	
+	private void purgeOldFiles() {
+		Date now = new Date();
+		File modelDir = new File(root, "models");
+		File[] modelFiles = modelDir.listFiles();
+		if (modelFiles != null) {
+			for (File file : modelFiles) {
+				if (FileUtils.purgeable(file, now, MAX_AGE)) {
+					file.delete();
+				}
+			}
+		}
+		
+		File uploadDir = new File(root, "uploads");
+		File[] uploadFiles = uploadDir.listFiles();
+		if (uploadFiles != null) {
+			for (File file : uploadFiles) {
+				if (FileUtils.purgeable(file, now, MAX_AGE)) {
+					file.delete();
+				}
+			}
 		}
 	}
 }

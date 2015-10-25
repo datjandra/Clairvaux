@@ -30,9 +30,9 @@ public class QuartzServletContextListener implements ServletContextListener {
 		JobDataMap map = new JobDataMap();
 		map.put("path", path);
 		
-		JobDetail job = JobBuilder.newJob(TestJob.class).withIdentity("myJob").setJobData(map).build();
-		Trigger trigger = TriggerBuilder.newTrigger().withIdentity("dummyTriggerName1", "group1")
-				.withSchedule(CronScheduleBuilder.cronSchedule("0/1 * * * * ?")).build();
+		JobDetail job = JobBuilder.newJob(PredictionPipelineJob.class).withIdentity("predictionJob").setJobData(map).build();
+		Trigger trigger = TriggerBuilder.newTrigger().withIdentity("predictionTrigger", "predictionGroup")
+				.withSchedule(CronScheduleBuilder.cronSchedule("0 0/1 * * * ?")).build();
 
 		try {
 			Scheduler scheduler = new StdSchedulerFactory().getScheduler();

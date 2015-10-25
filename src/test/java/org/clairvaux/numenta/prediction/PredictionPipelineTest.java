@@ -1,13 +1,10 @@
 package org.clairvaux.numenta.prediction;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.clairvaux.jobs.PredictionPipelineListener;
-import org.clairvaux.numenta.prediction.AggregateSubscriber;
-import org.clairvaux.numenta.prediction.ConflictPredictionEngine;
 
 import junit.framework.TestCase;
 
@@ -69,7 +66,7 @@ public class PredictionPipelineTest extends TestCase implements PredictionPipeli
 		LOGGER.log(Level.INFO, "onStopPrediction");
 		String outputFile = "src/main/webapp/graph.json";
 		try {
-			subscriber.dumpJson(outputFile);
+			subscriber.dumpJsonGraph(new FileWriter(outputFile));
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
