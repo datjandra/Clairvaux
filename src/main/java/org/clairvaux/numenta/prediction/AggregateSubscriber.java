@@ -12,8 +12,8 @@ import java.util.logging.Logger;
 
 import org.clairvaux.model.GraphModel;
 import org.clairvaux.model.GraphModelJsonSerializer;
-import org.clairvaux.utils.Pair;
-import org.clairvaux.utils.TwoKeyHashMap;
+import org.clairvaux.model.Pair;
+import org.clairvaux.model.TwoKeyHashMap;
 import org.numenta.nupic.algorithms.ClassifierResult;
 import org.numenta.nupic.network.Inference;
 
@@ -66,6 +66,9 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 		Integer recordNum = inference.getRecordNum();
 		Object actual = inference.getClassification(predictedField).getActualValue(0);
 		Object predicted = inference.getClassification(predictedField).getMostProbableValue(1);
+		if (actual == null || predicted == null) {
+			return;
+		}
 		
 		String actualValue = actual.toString();
 		String predictedValue = predicted.toString();

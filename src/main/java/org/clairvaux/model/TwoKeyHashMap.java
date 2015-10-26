@@ -1,4 +1,4 @@
-package org.clairvaux.utils;
+package org.clairvaux.model;
 
 import java.util.HashMap;
 

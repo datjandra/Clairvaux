@@ -2,98 +2,65 @@ package org.clairvaux.numenta.prediction;
 
 import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
-import org.numenta.nupic.encoders.AdaptiveScalarEncoder;
-import org.numenta.nupic.encoders.DateEncoder;
-import org.numenta.nupic.encoders.MultiEncoder;
-import org.numenta.nupic.encoders.SDRCategoryEncoder;
 import org.numenta.nupic.network.Inference;
 import org.numenta.nupic.network.Network;
-
-import com.opencsv.CSVReader;
+import org.numenta.nupic.network.Region;
+import org.numenta.nupic.network.sensor.FileSensor;
+import org.numenta.nupic.network.sensor.Sensor;
+import org.numenta.nupic.network.sensor.SensorParams;
+import org.numenta.nupic.network.sensor.SensorParams.Keys;
+import org.numenta.nupic.util.Tuple;
 
 import rx.Subscriber;
 
 public class ConflictPredictionEngine {
 
-	private final static int TRAINING_CYCLES = 100;
-	private final static int NOTIFY_INTERVAL = 10;
 	private final String dataFile;
 	private final static Logger LOGGER = Logger.getLogger(ConflictPredictionEngine.class.getName());
 	
 	private PredictionPipelineListener listener;
-	private Network network;
 	private List<Map<String,Object>> inputList;
-	private Integer trainingCycles = TRAINING_CYCLES;
 	
-	public ConflictPredictionEngine(String dataFile, Integer cycles) {
+	public ConflictPredictionEngine(String dataFile) {
 		this.dataFile = dataFile;
-		if (cycles != null) {
-			// Increase training cycle for better prediction results
-			// Lower training cycle to speed up pipeline for development or testing
-			trainingCycles = cycles;
-		}
 	}
 	
-	public void startTraining() throws IOException {
-		if (listener != null) {
-			listener.onStartTraining();
-		}
+	public void startNetwork(Subscriber<Inference> subscriber) throws InterruptedException {
+		LOGGER.log(Level.INFO, "Initializing network");
+		Parameters parameters = getDefaultParameters();
+		parameters = parameters.union(getSwarmParameters());
 		
-		network = createNetwork();
-		DateTime lastEventDate = null;
-		inputList = readInput();
-		for (int i=0; i<trainingCycles; i++) {
-			for (Map<String,Object> multiInput : inputList) {
-				DateTime eventDate = (DateTime) multiInput.get("EVENT_DATE");
-            	if (lastEventDate != null && eventDate.isBefore(lastEventDate)) {
-            		network.reset();
-            	}
-            	network.computeImmediate(multiInput);
-            	lastEventDate = eventDate;
-			}
-			
-			if (i % NOTIFY_INTERVAL == 0 && listener != null) {
-				listener.onContinueTraining(i);
-			}
-		}
-		
-		if (listener != null) {
-			listener.onStopTraining();
-		}
-	}
-	
-	public void startPrediction(Subscriber<Inference> subscriber) {
-		if (listener != null) {
-			listener.onStartPrediction();
-		}
-		
-		network.observe().subscribe(subscriber); 
-		for (Map<String,Object> multiInput : inputList) {
-        	network.computeImmediate(multiInput);
+		Map<String, Object> params = new HashMap<String, Object>();
+        params.put(KEY_MODE, Mode.PURE);
+        
+        Network network = Network.create("Network Prediction", parameters)
+			    .add(Network.createRegion("r1")
+			        .add(Network.createLayer("l1", parameters)
+			            .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+			            .add(Anomaly.create())
+			            .add(new TemporalMemory())
+			            .add(new SpatialPooler())
+			            .add(Sensor.create(FileSensor::create, SensorParams.create(
+			            		Keys::path, "", dataFile)))));
+        if (subscriber != null) {
+        	network.observe().subscribe(subscriber);
         }
-		
-		if (listener != null) {
-			listener.onStopPrediction();
-		}
+        network.start();
+        Region r1 = network.lookup("r1");
+        r1.lookup("l1").getLayerThread().join();
+        LOGGER.log(Level.INFO, "network halted");
 	}
 	
 	public PredictionPipelineListener getListener() {
@@ -108,92 +75,82 @@ public class ConflictPredictionEngine {
 		return inputList;
 	}
 
-	private Network createNetwork() {
-		Parameters parameters = getDefaultParameters();
-		parameters = parameters.union(getSwarmParameters());
-		
-		Map<String, Object> params = new HashMap<String, Object>();
-        params.put(KEY_MODE, Mode.PURE);
-        
-        Network network = Network.create("Network Prediction", parameters)
-			    .add(Network.createRegion("r1")
-			        .add(Network.createLayer("l1", parameters)
-			            .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
-			            .add(Anomaly.create())
-			            .add(new TemporalMemory())
-			            .add(new SpatialPooler())
-			            .add(initEncoder())));
-        return network;
-	}
-	
-	private List<Map<String,Object>> readInput() throws IOException {
-		CSVReader reader = new CSVReader(new FileReader(dataFile));
-        reader.readNext(); 
-        
-        DateTimeFormatter formatter = DateTimeFormat.forPattern("dd/MM/YYYY");        
-        List<Map<String,Object>> inputList = new ArrayList<Map<String,Object>>();
-        String [] nextLine;
-        while ((nextLine = reader.readNext()) != null) {     
-        	Map<String, Object> multiInput = new HashMap<>();
-        	DateTime eventDate = formatter.parseDateTime(nextLine[2]);
-        	multiInput.put("GWNO", Integer.parseInt(nextLine[0]));	
-        	multiInput.put("EVENT_DATE", eventDate);        	
-        	multiInput.put("EVENT_TYPE", nextLine[5]);
-        	multiInput.put("INTERACTION", Double.parseDouble(nextLine[12]));	        	        	
-        	multiInput.put("ACTOR1", nextLine[6]);                	        	
-        	multiInput.put("LOCATION", nextLine[17]);        	
-        	inputList.add(multiInput);
+	private static Map<String, Map<String, Object>> setupMap(
+            Map<String, Map<String, Object>> map,
+            int n, int w, double min, double max, double radius, double resolution, Boolean periodic,
+            Boolean clip, Boolean forced, String fieldName, String fieldType, String encoderType) {
+
+        if(map == null) {
+            map = new HashMap<String, Map<String, Object>>();
         }
-        reader.close();
-       return inputList;
-	}
+        Map<String, Object> inner = null;
+        if((inner = map.get(fieldName)) == null) {
+            map.put(fieldName, inner = new HashMap<String, Object>());
+        }
+
+        inner.put("n", n);
+        inner.put("w", w);
+        inner.put("minVal", min);
+        inner.put("maxVal", max);
+        inner.put("radius", radius);
+        inner.put("resolution", resolution);
+
+        if(periodic != null) inner.put("periodic", periodic);
+        if(clip != null) inner.put("clipInput", clip);
+        if(forced != null) inner.put("forced", forced);
+        if(fieldName != null) inner.put("fieldName", fieldName);
+        if(fieldType != null) inner.put("fieldType", fieldType);
+        if(encoderType != null) inner.put("encoderType", encoderType);
+
+        return map;
+    }
+
+	static Map<String, Map<String, Object>> getAcledEncodingMap() {
+        Map<String, Map<String, Object>> fieldEncodings = setupMap(
+                null,
+                121, // n
+                21, // w
+                0, 1000d, 0, 0, null, null, null,
+                "GWNO", "int", "ScalarEncoder");
+        
+        fieldEncodings = setupMap(
+        		fieldEncodings,
+                121, // n
+                21, // w
+                0, 0, 0, 0, null, null, Boolean.TRUE,
+                "EVENT_ID_CNTY", "string", "SDRCategoryEncoder");
+        
+        fieldEncodings = setupMap(
+        		fieldEncodings,
+                0, // n
+                0, // w
+                0, 0, 0, 0, null, null, null,
+                "EVENT_DATE", "datetime", "DateEncoder");
+        
+        
+        fieldEncodings = setupMap(
+                fieldEncodings, 
+                121, 
+                21, 
+                0, 0, 0, 0, null, null, Boolean.TRUE, 
+                "EVENT_TYPE", "string", "SDRCategoryEncoder");
+        
+        fieldEncodings = setupMap(
+                fieldEncodings, 
+                121, 
+                21, 
+                0, 100d, 0, 0, null, null, Boolean.TRUE, 
+                "INTERACTION", "int", "ScalarEncoder");
+        
+        fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_DOFW.getFieldName(), new Tuple(21, 1.0)); // Day of week
+        fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_TOFD.getFieldName(), new Tuple(21, 1.0)); // Time of day
+        fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_WKEND.getFieldName(), new Tuple(21, 1.0)); // Weekend
+        fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_PATTERN.getFieldName(), "MM/dd/YY");
+        return fieldEncodings;
+    }
 	
-	private MultiEncoder initEncoder() {
-		MultiEncoder multiEncoder = MultiEncoder.builder()
-				.name("")
-				.build();
-		
-		DateEncoder dateEncoder = DateEncoder.builder()
-				.timeOfDay(21, 1)
-				.dayOfWeek(21, 1)
-				.weekend(21)
-				.forced(true)
-				.build();
-		multiEncoder.addEncoder("EVENT_DATE", dateEncoder);
-		
-		SDRCategoryEncoder sdrCategoryEncoder = SDRCategoryEncoder.builder()
-                .n(121)
-                .w(21)                                
-                .forced(true)
-                .build();
-		multiEncoder.addEncoder("EVENT_TYPE", sdrCategoryEncoder);		
-		
-		AdaptiveScalarEncoder adaptiveScalarEncoder = AdaptiveScalarEncoder.adaptiveBuilder()
-				.n(100)
-				.w(21)				
-				.maxVal(100)
-				.build();
-		multiEncoder.addEncoder("INTERACTION", adaptiveScalarEncoder);
-				
-		/*
-		sdrCategoryEncoder = SDRCategoryEncoder.builder()
-                .n(121)
-                .w(21)                                
-                .forced(true)
-                .build();
-		multiEncoder.addEncoder("ACTOR1", sdrCategoryEncoder);
-					
-		sdrCategoryEncoder = SDRCategoryEncoder.builder()
-                .n(121)
-                .w(21)                                
-                .forced(true)
-                .build();
-		multiEncoder.addEncoder("LOCATION", sdrCategoryEncoder);
-		*/
-		return multiEncoder;
-	}
-		
 	private Parameters getSwarmParameters() {
+		Map<String, Map<String, Object>> fieldEncodings = getAcledEncodingMap();
 		Parameters p = Parameters.getEncoderDefaultParameters();
 		p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
 		p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
@@ -215,6 +172,7 @@ public class ConflictPredictionEngine {
 		p.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 16);
 
 		p.setParameterByKey(KEY.CLIP_INPUT, true);
+		p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
 		return p;
 	}
 

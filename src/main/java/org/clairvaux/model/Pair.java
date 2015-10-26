@@ -1,39 +1,29 @@
-package org.clairvaux.utils;
+package org.clairvaux.model;
 
-public class Triple<X,Y,Z> {
+public class Pair<A,B> {
 
-	private X first;
-	private Y second;
-	private Z third;
+	private A first;
+	private B second;
 	
-	public Triple(X first, Y second, Z third) {
+	Pair(A first, B second) {
 		this.first = first;
 		this.second = second;
-		this.third = third;
 	}
-
-	public X getFirst() {
+	
+	public A getFirst() {
 		return first;
 	}
-
-	public void setFirst(X first) {
+	
+	public void setFirst(A first) {
 		this.first = first;
 	}
-
-	public Y getSecond() {
+	
+	public B getSecond() {
 		return second;
 	}
-
-	public void setSecond(Y second) {
+	
+	public void setSecond(B second) {
 		this.second = second;
-	}
-
-	public Z getThird() {
-		return third;
-	}
-
-	public void setThird(Z third) {
-		this.third = third;
 	}
 
 	@Override
@@ -42,7 +32,6 @@ public class Triple<X,Y,Z> {
 		int result = 1;
 		result = prime * result + ((first == null) ? 0 : first.hashCode());
 		result = prime * result + ((second == null) ? 0 : second.hashCode());
-		result = prime * result + ((third == null) ? 0 : third.hashCode());
 		return result;
 	}
 
@@ -55,7 +44,7 @@ public class Triple<X,Y,Z> {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Triple<X,Y,Z> other = (Triple<X,Y,Z>) obj;
+		Pair<A,B> other = (Pair<A,B>) obj;
 		if (first == null) {
 			if (other.first != null)
 				return false;
@@ -65,11 +54,6 @@ public class Triple<X,Y,Z> {
 			if (other.second != null)
 				return false;
 		} else if (!second.equals(other.second))
-			return false;
-		if (third == null) {
-			if (other.third != null)
-				return false;
-		} else if (!third.equals(other.third))
 			return false;
 		return true;
 	}

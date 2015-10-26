@@ -17,7 +17,7 @@
 		<dependency>
 			<groupId>org.numenta</groupId>
 			<artifactId>htm.java</artifactId>
-			<version>0.6.2</version>
+			<version>0.6.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.opencsv</groupId>

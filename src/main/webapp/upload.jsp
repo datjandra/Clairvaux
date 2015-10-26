@@ -10,21 +10,53 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<title>Insert title here</title>
+<title>Upload</title>
+<style>
+@import url(https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css);
+
+body {
+	padding-top: 60px;
+}
+  
+@media (max-width: 980px) {
+	body {
+    	padding-top: 0;
+	}
+}
+
+.background {
+	fill: #fefefe;
+}
+</style>
 </head>
 <body>
 
-<%
-	if (model != null && !model.isEmpty()) {
-%>
-	<a href="<%= model %>"><%= model %></a>
-<%
-	}
-%>
-<form action="<%= action %>" method="post" enctype="multipart/form-data">
-	<input type="file" name="file"/>
-	<input type="submit" value="Upload"/>
-</form>
-
+<div class="container">
+	<div class="panel panel-default">
+    	<div class="panel-heading"><strong>Data Upload</strong></div>
+        <div class="panel-body">
+        	<form action="<%= action %>" method="post" enctype="multipart/form-data">
+        		<div class="form-inline">
+        			<div class="form-group">
+        				<input type="file" name="file"/>
+        			</div>
+        			<button type="submit" class="btn btn-sm btn-primary">Upload</button>
+        		</div>
+			</form>
+			<br/>
+			<div>Prediction results will be available at below link after a few minutes.</div>
+			<br/>
+			<div>
+			<%
+				if (model != null && !model.isEmpty()) {
+			%>
+				<a href="<%= model %>"><%= model %></a>
+			<%
+				}
+			%>	
+			</div>
+        </div>
+   	</div>
+</div>  
 </body>
 </html>

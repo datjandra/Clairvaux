@@ -14,14 +14,23 @@
 
 <title>Co-occurrence Matrix</title>
 <style>
-@import
-	url(https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css);
+@import url(https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css);
 
-@import url(http://bost.ocks.org/mike/style.css?aea6f0a);
+body {
+	padding-top: 60px;
+}
+  
+@media (max-width: 980px) {
+	body {
+    	padding-top: 0;
+	}
+}
 
 .background {
 	fill: #fefefe;
 }
+
+@import url(http://bost.ocks.org/mike/style.css?aea6f0a);
 
 line {
 	stroke: #fff;
@@ -32,8 +41,17 @@ text.active {
 }
 </style>
 <body>
-	<h1><%= title %></h1>
 	<div class="container">
+		<div class="row">
+			<h1><%= title %></h1>
+			<p>
+			Predictions results are visualized as a co-occurrence matrix.
+			Rows are the actual values, while columns are the next step's predicted values.
+			Cell opacity is based on {actual, predicted} counts.
+			If event "Violence against civilians" is predicted to occur many times after "Riots/Protests", then the cell is filled with a solid color.
+			If event "Violence against civilians" is predicted to occur zero or few times after "Riots/Protests", then the cell is blank or transparent.
+			</p>
+		</div>
 		<div class="row">
 			<div class="col-xs-12 col-sm-12 col-md-12">
 				<aside style="margin-top: 80px;">

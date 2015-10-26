@@ -5,8 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.clairvaux.utils.Triple;
-
 public class GraphModel {
 
 	private List<String> nodes = null;

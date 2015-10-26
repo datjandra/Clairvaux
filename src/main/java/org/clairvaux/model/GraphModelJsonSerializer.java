@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import org.clairvaux.utils.Triple;
-
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
