@@ -30,51 +30,62 @@ body {
 .background {
 	fill: #fefefe;
 }
+
+#matrix-img {
+	width: 100%;
+	max-width: 600px;
+	height: auto;
+}
 </style>
 </head>
 <body>
+
+<div class="jumbotron">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6 text-center">
+      	<img id="matrix-img" alt="Prediction matrix" src="images/matrix.png">
+      </div>
+      <div class="col-md-6 text-center">
+        <h1>
+          Realtime events prediction
+          <br/>
+          <small class="text-muted">
+          Uses Numenta's brain-inspired technology to find patterns in armed conflict data, make predictions, and detect anomalies. 
+          </small>
+        </h1>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="container">
 	<div class="row">
-  		<div class="col-md-offset-2 col-md-8">
-    		<div class="panel panel-default">
-      			<div class="panel-heading text-center">
-      			Introduction
-      			</div>
-      			<div class="panel-body">
-      				<ul>
-      					<li>Upload data <a href="upload">here.</a></li>
-      					<li>Wait for a few minutes as file is being processed.</li>
-      					<li>Refresh this page and find the model link below.</li>
-      				</ul>
-      			</div>
-     		</div>
-  		</div>
-  	</div>	
-  	
-  	<div class="row">
-  		<div class="col-md-offset-2 col-md-8">
-    		<div class="panel panel-default">
-      			<div class="panel-heading text-center">
-      			Models
-      			</div>
-      			<div class="panel-body">
-      				<ul>
-					<%
-						if (modelFileNames != null) {
-							for (String fileName : modelFileNames) {
-								String modelUrl = FileUtils.constructUrl(request, "model", fileName);
-					%>	
-					<li><a href="<%= modelUrl %>"><%= modelUrl %></a></li>		
-					<%			
-							}
+  		<div class="col-md-6">
+  			<h4>Usage</h4>
+ 				<ul>
+ 					<li>Obtain realtime <a href="http://www.acleddata.com/data/">data</a> from ACLED.</li>
+ 					<li>Upload CSV data file <a href="upload">here.</a></li>
+ 					<li>A model viewer link is created after successful upload.</li>
+ 					<li>Click model viewer link after a few minutes.</li>
+ 				</ul>
+     	</div>
+     	<div class="col-md-6">
+  			<h4>Models</h4>
+     			<ul>
+				<%
+					if (modelFileNames != null) {
+						for (String fileName : modelFileNames) {
+							String modelUrl = FileUtils.constructUrl(request, "model", fileName);
+				%>	
+				<li><a href="<%= modelUrl %>"><%= modelUrl %></a></li>		
+				<%			
 						}
-					%>
-					</ul> 
-      			</div>
-     		</div>
-  		</div>
-  	</div>	
-  	
-</div>
+					}
+				%>
+				</ul> 
+      	</div>
+  	</div>
+</div>      	
 </body>
 </html>

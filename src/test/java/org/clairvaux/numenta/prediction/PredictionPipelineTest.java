@@ -2,14 +2,12 @@ package org.clairvaux.numenta.prediction;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import junit.framework.TestCase;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-
-import junit.framework.TestCase;
 
 public class PredictionPipelineTest extends TestCase {
 

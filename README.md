@@ -6,5 +6,6 @@ Prediction module uses Numenta's [Hierarchical Temporal Memory (HTM)] (http://nu
 
 ## Motivation
 
-The primary motivation is to learn about Numenta's HTM framework. A secondary motivation is to explore techniques for categorical prediction and predictive visualization.
+The primary motivation is to learn about Numenta's HTM framework. 
+A secondary motivation is to explore techniques for categorical prediction and predictive visualization.
 

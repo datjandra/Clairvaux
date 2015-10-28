@@ -68,8 +68,7 @@ public class PredictionPipelineJob implements Job {
 				File nupicDir = new File(root, "nupic");
 				File nupicFile = new File(nupicDir, String.format("%s.csv", workingFile.replace("_csv", "_nupic")));
 				LOGGER.log(Level.INFO, "NUPIC working dir " + nupicDir.getAbsolutePath());
-				NupicConverter.outputNupicFormat(csvFile.getAbsolutePath(), nupicFile.getAbsolutePath());
-				
+				NupicConverter.outputNupicFormat(csvFile.getAbsolutePath(), nupicFile.getAbsolutePath(), false);				
 			
 				AggregateSubscriber subscriber = new AggregateSubscriber("EVENT_TYPE", new String[]{
 				    	"EVENT_DATE",	

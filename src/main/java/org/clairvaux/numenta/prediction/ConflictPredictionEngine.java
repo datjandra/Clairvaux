@@ -115,13 +115,6 @@ public class ConflictPredictionEngine {
         
         fieldEncodings = setupMap(
         		fieldEncodings,
-                121, // n
-                21, // w
-                0, 0, 0, 0, null, null, Boolean.TRUE,
-                "EVENT_ID_CNTY", "string", "SDRCategoryEncoder");
-        
-        fieldEncodings = setupMap(
-        		fieldEncodings,
                 0, // n
                 0, // w
                 0, 0, 0, 0, null, null, null,
@@ -135,6 +128,7 @@ public class ConflictPredictionEngine {
                 0, 0, 0, 0, null, null, Boolean.TRUE, 
                 "EVENT_TYPE", "string", "SDRCategoryEncoder");
         
+        // TODO should be category encoder with list
         fieldEncodings = setupMap(
                 fieldEncodings, 
                 121, 
@@ -142,34 +136,38 @@ public class ConflictPredictionEngine {
                 0, 100d, 0, 0, null, null, Boolean.TRUE, 
                 "INTERACTION", "int", "ScalarEncoder");
         
-        fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_DOFW.getFieldName(), new Tuple(21, 1.0)); // Day of week
-        fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_TOFD.getFieldName(), new Tuple(21, 1.0)); // Time of day
-        fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_WKEND.getFieldName(), new Tuple(21, 1.0)); // Weekend
-        fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_PATTERN.getFieldName(), "MM/dd/YY");
+        fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_TOFD.getFieldName(), new Tuple(21, 0.5)); // Time of day
+        fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_PATTERN.getFieldName(), "YYYY-MM-dd");
         return fieldEncodings;
     }
 	
 	private Parameters getSwarmParameters() {
 		Map<String, Map<String, Object>> fieldEncodings = getAcledEncodingMap();
 		Parameters p = Parameters.getEncoderDefaultParameters();
-		p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
+		
+		// Universal params
 		p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
 		p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
+		p.setParameterByKey(KEY.SEED, 1960);
+		
+		// SpatialPooler specific
+		p.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[] { 2048 });
+		p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
 		p.setParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 40.0d);
 		p.setParameterByKey(KEY.SEED, 1956);
 		p.setParameterByKey(KEY.POTENTIAL_PCT, 0.8d);
 		p.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.1d);
 		p.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.05d);
-		p.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.0005d);
+		p.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.09506839222239052d);
 		p.setParameterByKey(KEY.MAX_BOOST, 2.0d);
 
-		p.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[] { 2048 });
-		p.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 20);
+		// Temporal Memory specific
+		p.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 32);
 		p.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.21d);
 		p.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.1d);
 		p.setParameterByKey(KEY.PERMANENCE_DECREMENT, 0.1d);
-		p.setParameterByKey(KEY.MIN_THRESHOLD, 12);
-		p.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 16);
+		p.setParameterByKey(KEY.MIN_THRESHOLD, 9);
+		p.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 12);
 
 		p.setParameterByKey(KEY.CLIP_INPUT, true);
 		p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
@@ -197,7 +195,6 @@ public class ConflictPredictionEngine {
 		parameters.setParameterByKey(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1d);
 		parameters.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 10);
 		parameters.setParameterByKey(KEY.MAX_BOOST, 10.0d);
-		parameters.setParameterByKey(KEY.SEED, 42);
 		parameters.setParameterByKey(KEY.SP_VERBOSITY, 0);
 
 		// Temporal Memory specific
