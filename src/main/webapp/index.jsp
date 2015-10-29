@@ -31,6 +31,26 @@ body {
 	fill: #fefefe;
 }
 
+.container.details div div.col-md-6 {
+	padding: 8px 48px;
+}
+
+.container ul {
+	list-style: none;
+}
+
+.jumbotron h1, h1 {
+	font-size: 36px;
+}
+
+.jumbotron {
+	background-color: transparent;
+}
+
+.jumbotron .container {
+	background-color: transparent;
+}
+
 #matrix-img {
 	width: 100%;
 	max-width: 600px;
@@ -44,7 +64,7 @@ body {
   <div class="container">
     <div class="row">
       <div class="col-md-6 text-center">
-      	<img id="matrix-img" alt="Prediction matrix" src="images/matrix.png">
+      	<img id="matrix-img" alt="Prediction matrix" src="images/matrix.png"/>
       </div>
       <div class="col-md-6 text-center">
         <h1>
@@ -59,15 +79,18 @@ body {
   </div>
 </div>
 
-<div class="container">
+<div class="container details">
 	<div class="row">
   		<div class="col-md-6">
   			<h4>Usage</h4>
  				<ul>
- 					<li>Obtain realtime <a href="http://www.acleddata.com/data/">data</a> from ACLED.</li>
- 					<li>Upload CSV data file <a href="upload">here.</a></li>
- 					<li>A model viewer link is created after successful upload.</li>
- 					<li>Click model viewer link after a few minutes.</li>
+ 					<li>
+ 					1.  Download realtime <a href="http://www.acleddata.com/data/">data</a> in CSV format from ACLED.
+ 					Monthly data is recommended, as complete data will likely cause memory outage on the server.
+ 					</li>
+ 					<li>2.  Upload CSV data file <a href="upload">here.</a></li>
+ 					<li>3.  A model viewer link is created after successful upload.</li>
+ 					<li>4.  Click model viewer link after a few minutes.</li>
  				</ul>
      	</div>
      	<div class="col-md-6">

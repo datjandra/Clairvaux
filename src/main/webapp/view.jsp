@@ -47,9 +47,10 @@ text.active {
 			<p>
 			Predictions results are visualized as a co-occurrence matrix.
 			Rows are the actual values, while columns are the next step's predicted values.
-			Cell opacity is based on {actual, predicted} counts.
-			If event "Violence against civilians" is predicted to occur many times after "Riots/Protests", then the cell is filled with a solid color.
-			If event "Violence against civilians" is predicted to occur zero or few times after "Riots/Protests", then the cell is blank or transparent.
+			Each cell represents two events - actual event and predicted event.
+			Darker cells indicate actual and predicted events that occur together more frequently.
+			For example, if event "Violence against civilians" is predicted to occur many times after "Riots/Protests", then the cell has a darker color.
+			But If "Violence against civilians" is predicted to occur zero or few times after "Riots/Protests", then the cell is blank or transparent.
 			</p>
 		</div>
 		<div class="row">
