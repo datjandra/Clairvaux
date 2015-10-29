@@ -30,7 +30,6 @@ public class ConflictPredictionEngine {
 	private final String dataFile;
 	private final static Logger LOGGER = Logger.getLogger(ConflictPredictionEngine.class.getName());
 	
-	private PredictionPipelineListener listener;
 	private List<Map<String,Object>> inputList;
 	
 	public ConflictPredictionEngine(String dataFile) {
@@ -61,14 +60,6 @@ public class ConflictPredictionEngine {
         Region r1 = network.lookup("r1");
         r1.lookup("l1").getLayerThread().join();
         LOGGER.log(Level.INFO, "network halted");
-	}
-	
-	public PredictionPipelineListener getListener() {
-		return listener;
-	}
-
-	public void setListener(PredictionPipelineListener listener) {
-		this.listener = listener;
 	}
 	
 	public List<Map<String,Object>> getInputList() {
@@ -128,13 +119,12 @@ public class ConflictPredictionEngine {
                 0, 0, 0, 0, null, null, Boolean.TRUE, 
                 "EVENT_TYPE", "string", "SDRCategoryEncoder");
         
-        // TODO should be category encoder with list
         fieldEncodings = setupMap(
                 fieldEncodings, 
                 121, 
                 21, 
-                0, 100d, 0, 0, null, null, Boolean.TRUE, 
-                "INTERACTION", "int", "ScalarEncoder");
+                0, 0, 0, 0, null, null, Boolean.TRUE, 
+                "INTERACTION", "string", "SDRCategoryEncoder");
         
         fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_TOFD.getFieldName(), new Tuple(21, 0.5)); // Time of day
         fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_PATTERN.getFieldName(), "YYYY-MM-dd");

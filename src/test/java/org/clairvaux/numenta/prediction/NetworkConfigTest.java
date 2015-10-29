@@ -108,6 +108,7 @@ public class NetworkConfigTest extends TestCase {
         	network.compute(multiInput);
         	lastEventDate = eventDate;
         }
+        // This script is just for playing around with network configurations and parameters
 		assertTrue(true);
 	}
 

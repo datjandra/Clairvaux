@@ -27,7 +27,7 @@ public class NupicConverter {
 		writer.writeNext(nupicHeader, applyQuotesToAll);
 
 		String[] nupicFieldTypes = new String[] { "int", "string", "datetime",
-				"string", "int" };
+				"string", "string" };
 		writer.writeNext(nupicFieldTypes, applyQuotesToAll);
 
 		String[] nupicFlags = new String[] { "S", // sequence
