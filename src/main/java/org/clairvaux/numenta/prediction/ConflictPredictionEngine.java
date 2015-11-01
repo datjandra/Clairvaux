@@ -48,7 +48,7 @@ public class ConflictPredictionEngine {
 			    .add(Network.createRegion("r1")
 			        .add(Network.createLayer("l1", parameters)
 			            .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
-			            .add(Anomaly.create())
+			            .add(Anomaly.create(params))
 			            .add(new TemporalMemory())
 			            .add(new SpatialPooler())
 			            .add(Sensor.create(FileSensor::create, SensorParams.create(
@@ -99,9 +99,9 @@ public class ConflictPredictionEngine {
 	static Map<String, Map<String, Object>> getAcledEncodingMap() {
         Map<String, Map<String, Object>> fieldEncodings = setupMap(
                 null,
-                121, // n
+                100, // n
                 21, // w
-                0, 1000d, 0, 0, null, null, null,
+                0, 1000d, 0, 0, null, Boolean.TRUE, null,
                 "GWNO", "int", "ScalarEncoder");
         
         fieldEncodings = setupMap(
@@ -110,23 +110,23 @@ public class ConflictPredictionEngine {
                 0, // w
                 0, 0, 0, 0, null, null, null,
                 "EVENT_DATE", "datetime", "DateEncoder");
-        
-        
+
         fieldEncodings = setupMap(
                 fieldEncodings, 
                 121, 
                 21, 
-                0, 0, 0, 0, null, null, Boolean.TRUE, 
+                0, 0, 0, 0, null, null, Boolean.FALSE, 
                 "EVENT_TYPE", "string", "SDRCategoryEncoder");
         
         fieldEncodings = setupMap(
                 fieldEncodings, 
                 121, 
                 21, 
-                0, 0, 0, 0, null, null, Boolean.TRUE, 
+                0, 0, 0, 0, null, null, Boolean.FALSE, 
                 "INTERACTION", "string", "SDRCategoryEncoder");
         
-        fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_TOFD.getFieldName(), new Tuple(21, 0.5)); // Time of day
+        fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_TOFD.getFieldName(), new Tuple(21, 1d)); // Time of day
+        fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_DOFW.getFieldName(), new Tuple(21, 1d)); // Date of week
         fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_PATTERN.getFieldName(), "YYYY-MM-dd");
         return fieldEncodings;
     }
@@ -137,6 +137,7 @@ public class ConflictPredictionEngine {
 		
 		// Universal params
 		p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
+		p.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[] { 2048 });
 		p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
 		p.setParameterByKey(KEY.SEED, 1960);
 		
@@ -148,16 +149,16 @@ public class ConflictPredictionEngine {
 		p.setParameterByKey(KEY.POTENTIAL_PCT, 0.8d);
 		p.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.1d);
 		p.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.05d);
-		p.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.09506839222239052d);
+		p.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.0005d);
 		p.setParameterByKey(KEY.MAX_BOOST, 2.0d);
 
 		// Temporal Memory specific
-		p.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 32);
+		p.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 20);
 		p.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.21d);
 		p.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.1d);
 		p.setParameterByKey(KEY.PERMANENCE_DECREMENT, 0.1d);
-		p.setParameterByKey(KEY.MIN_THRESHOLD, 9);
-		p.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 12);
+		p.setParameterByKey(KEY.MIN_THRESHOLD, 12);
+		p.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 16);
 
 		p.setParameterByKey(KEY.CLIP_INPUT, true);
 		p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);

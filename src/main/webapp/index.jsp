@@ -85,7 +85,7 @@ body {
   			<h4>Usage</h4>
  				<ul>
  					<li>
- 					1.  Download realtime <a href="http://www.acleddata.com/data/">data</a> in CSV format from ACLED.
+ 					1.  Download realtime <a href="http://www.acleddata.com/data/">data</a> in CSV format from ACLED<sup><a href="#citation">1</a></sup>.
  					Monthly data is recommended, as complete data will likely cause memory outage on the server.
  					</li>
  					<li>2.  Upload CSV data file <a href="upload">here.</a></li>
@@ -109,6 +109,13 @@ body {
 				</ul> 
       	</div>
   	</div>
-</div>      	
+</div>  
+
+<div id="footer">
+	<div class="container text-center">
+	<a name="citation"><sup>1</sup> Raleigh, Clionadh, Andrew Linke, Håvard Hegre and Joakim Karlsen. 2010. 
+	Introducing ACLED-Armed Conflict Location and Event Data. Journal of Peace Research 47(5) 651-660.</a>
+	</div>
+</div>    	
 </body>
 </html>

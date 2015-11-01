@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,13 +19,13 @@ import org.clairvaux.model.TwoKeyHashMap;
 import org.numenta.nupic.algorithms.ClassifierResult;
 import org.numenta.nupic.network.Inference;
 
+import rx.Subscriber;
+
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.opencsv.CSVWriter;
-
-import rx.Subscriber;
 
 public class AggregateSubscriber extends Subscriber<Inference> {
 
@@ -31,12 +33,16 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 	private final String[] header;
 	private final String[] extraFields;
 	private final TwoKeyHashMap<String,String,Integer> mutualCounts;
+	private final TwoKeyHashMap<String,String,Double> mostRecentProbs;
+	private final TwoKeyHashMap<String,String,Map<String,Double>> mostRecentDist;
 	private final List<String[]> entryList;
 	
 	private final static Logger LOGGER = Logger.getLogger(AggregateSubscriber.class.getName()); 
 	
 	public AggregateSubscriber(String predictedField, String[] extraFields) {
 		this.mutualCounts = new TwoKeyHashMap<String,String,Integer>();
+		this.mostRecentProbs = new TwoKeyHashMap<String,String,Double>();
+		this.mostRecentDist = new TwoKeyHashMap<String,String,Map<String,Double>>();
 		this.predictedField = predictedField;
 		this.extraFields = extraFields;	
 		this.entryList = new ArrayList<String[]>();
@@ -64,8 +70,10 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 	@Override
 	public void onNext(Inference inference) {
 		Integer recordNum = inference.getRecordNum();
-		Object actual = inference.getClassification(predictedField).getActualValue(0);
-		Object predicted = inference.getClassification(predictedField).getMostProbableValue(1);
+		ClassifierResult<Object> classification = inference.getClassification(predictedField);
+		Object actual = classification.getActualValue(0);
+		Object predicted = classification.getMostProbableValue(1);
+		
 		if (actual == null || predicted == null) {
 			return;
 		}
@@ -78,6 +86,19 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 			Integer count = mutualCounts.get(actualValue, predictedValue);
 			mutualCounts.put(actualValue, predictedValue, count + 1);
 		}
+		
+		int mostProbableIndex = classification.getMostProbableBucketIndex(1);
+		Double recentProb = classification.getStat(1, mostProbableIndex);
+		
+		double[] stats = classification.getStats(1);
+		Object[] actualValues = classification.getActualValues();
+		Map<String,Double> distributionMap = new TreeMap<String,Double>();
+		for (int i=0; i<actualValues.length; i++) {
+			distributionMap.put(actualValues[i].toString(), stats[i]);
+		}
+		
+		mostRecentProbs.put(actualValue,  predictedValue, recentProb);
+		mostRecentDist.put(actualValue,  predictedValue, distributionMap);
 		
 		String[] entries = new String[extraFields.length + 3];
 		entries[0] = recordNum.toString();
@@ -113,8 +134,11 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 		Set<Entry<Pair<String,String>, Integer>> entries = mutualCounts.entrySet();
 		for (Entry<Pair<String,String>, Integer> entry : entries) {
 			Pair<String,String> edge = entry.getKey();
+			String firstNode = edge.getFirst();
+			String secondNode = edge.getSecond();
 			Integer count = entry.getValue();
-			graphModel.addOccurence(edge.getFirst(), edge.getSecond(), count);
+			graphModel.addOccurence(firstNode, secondNode, count);
+			graphModel.addProb(firstNode, secondNode, mostRecentProbs.get(firstNode, secondNode));
 		}
 		
 		ObjectMapper mapper = new ObjectMapper();

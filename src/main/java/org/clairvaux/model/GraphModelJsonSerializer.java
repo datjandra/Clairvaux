@@ -32,6 +32,7 @@ public class GraphModelJsonSerializer extends JsonSerializer<GraphModel> {
 			jgen.writeNumberField("source", link.getFirst());
 			jgen.writeNumberField("target", link.getSecond());
 			jgen.writeNumberField("value", link.getThird());
+			jgen.writeNumberField("probability", graphModel.lookupMostRecentProb(link.getFirst(), link.getSecond()));
 			jgen.writeEndObject();
 		}
 		jgen.writeEndArray();

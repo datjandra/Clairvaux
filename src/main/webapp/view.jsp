@@ -39,6 +39,25 @@ line {
 text.active {
 	fill: red;
 }
+
+div.tooltip {	
+	font-size: 1em;
+	font-weight: bold;
+  	font-style: normal;
+	position: absolute;			
+    text-align: center;			 
+    padding: 15px;
+  	margin: 1em 0 3em;
+    color: #fff;
+  	background: #075698;;
+  	background:-webkit-gradient(linear, 0 0, 0 100%, from(#2e88c4), to(#075698));
+  	background:-moz-linear-gradient(#2e88c4, #075698);
+  	background:-o-linear-gradient(#2e88c4, #075698);
+  	background:linear-gradient(#2e88c4, #075698);
+  	-webkit-border-radius:10px;
+  	-moz-border-radius:10px;
+  	border-radius:10px;			
+}
 </style>
 <body>
 	<div class="container">
@@ -94,6 +113,10 @@ var svg = d3.select("#matrix").append("svg")
 	.attr("height", height + margin.top + margin.bottom).style("margin-left", -margin.left + "px").append("g")
 	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+var div = d3.select("body").append("div")	
+	.attr("class", "tooltip")				
+	.style("opacity", 1);
+
 d3.json('<%= model %>', 
 		function(graph) {
             var matrix = [],
@@ -114,21 +137,13 @@ d3.json('<%= model %>',
             });
 
             // Convert links to matrix; count character occurrences.
-            var maxZ = 1;
+            var zMax = 1;
             graph.links.forEach(function(link) {
-                matrix[link.source][link.target].z += link.value;
-                matrix[link.target][link.source].z += link.value;
-                matrix[link.source][link.source].z += link.value;
-                matrix[link.target][link.target].z += link.value;
-                maxZ = Math.max(
-                	maxZ,
-                	matrix[link.source][link.target].z,
-                    matrix[link.target][link.source].z,
-                    matrix[link.source][link.source].z,
-                    matrix[link.target][link.target].z
-                );
-                nodes[link.source].count += link.value;
+            	matrix[link.source][link.target].z = link.value;
+            	matrix[link.source][link.target].probability = link.probability;
+            	nodes[link.source].count += link.value;
                 nodes[link.target].count += link.value;
+                zMax = Math.max(zMax, link.value);
             });
 
             // Precompute the orders.
@@ -210,7 +225,7 @@ d3.json('<%= model %>',
                     .attr("width", x.rangeBand())
                     .attr("height", x.rangeBand())
                     .style("fill-opacity", function(d) {
-                    	return d.z / maxZ;
+                    	return d.z / zMax;
                     })
                     .style(
                         "fill",
@@ -229,10 +244,19 @@ d3.json('<%= model %>',
                     function(d, i) {
                         return i == p.x;
                     });
+                div.transition()		
+                	.duration(200)		
+                	.style("opacity", .9);
+                div.html("Count: " + p.z + "<br/>" + "Probability: " + p.probability)	
+                	.style("left", (d3.event.pageX) + "px")		
+                	.style("top", (d3.event.pageY - 28) + "px");
             }
 
             function mouseout() {
                 d3.selectAll("text").classed("active", false);
+                div.transition()		
+                	.duration(500)		
+                	.style("opacity", 0);
             }
 
             d3.select("#order").on("change", function() {
