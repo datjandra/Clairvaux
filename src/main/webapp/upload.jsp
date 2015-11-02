@@ -44,17 +44,19 @@ body {
         		</div>
 			</form>
 			<br/>
-			<div>Prediction results will be available at below link after a few minutes.</div>
-			<br/>
 			<div>
-			<%
-				if (model != null && !model.isEmpty()) {
-			%>
-				<a href="<%= model %>"><%= model %></a>
-			<%
-				}
-			%>	
+				<h4>Results available at below link after a few minutes.</h4>
+				<div class="list-group">
+				<%
+					if (model != null && !model.isEmpty()) {
+				%>
+					<a class="list-group-item list-group-item-success" href="<%= model %>"><%= model %></a>
+				<%
+					}
+				%>	
+				</div>
 			</div>
+			
         </div>
    	</div>
 </div>  

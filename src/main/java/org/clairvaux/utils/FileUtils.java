@@ -65,23 +65,28 @@ public class FileUtils {
 		URL url = new URL(link);
 		byte[] buffer = new byte[4096];
 		ZipInputStream zis = new ZipInputStream(url.openStream());
-		ZipEntry ze = zis.getNextEntry();
-		while (ze != null) {
-			String fileName = ze.getName();
-			if (fileName.endsWith(extension)) {
-				extractedFile = fileName;
-				FileOutputStream fos = new FileOutputStream(fileName);             
-	            int len;
-	            while ((len = zis.read(buffer)) > 0) {
-	            	fos.write(buffer, 0, len);
-	            }
-	            fos.close();   
-	            ze = zis.getNextEntry();
-				break;
+		try {
+			ZipEntry ze = zis.getNextEntry();
+			while (ze != null) {
+				String fileName = ze.getName();
+				if (fileName.endsWith(extension)) {
+					extractedFile = fileName;
+					FileOutputStream fos = new FileOutputStream(fileName);             
+			        int len;
+			        while ((len = zis.read(buffer)) > 0) {
+			        	fos.write(buffer, 0, len);
+			        }
+			        fos.close();   
+			        ze = zis.getNextEntry();
+					break;
+				}
 			}
+			zis.closeEntry();
+		} finally {
+			try {
+				zis.close();
+			} catch (Exception e) {}
 		}
-		zis.closeEntry();
-		zis.close();
 		return extractedFile;
 	}
 }

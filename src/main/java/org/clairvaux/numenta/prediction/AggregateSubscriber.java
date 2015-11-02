@@ -145,6 +145,14 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 		SimpleModule module = new SimpleModule();
 		module.addSerializer(GraphModel.class, new GraphModelJsonSerializer());
 		mapper.registerModule(module);
-		mapper.writerWithDefaultPrettyPrinter().writeValue(writer, graphModel);
+		try {
+			mapper.writerWithDefaultPrettyPrinter().writeValue(writer, graphModel);
+		} finally {
+			if (writer != null) {
+				try {
+					writer.close();
+				} catch (Exception e) {}
+			}
+		}
 	}
 }

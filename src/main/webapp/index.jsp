@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="ISO-8859-1" ?>
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
     pageEncoding="ISO-8859-1"%>
 <%@page import="java.io.File"%>    
@@ -56,6 +55,13 @@ body {
 	max-width: 600px;
 	height: auto;
 }
+
+.unstyled-anchor,
+.unstyled-anchor:hover {
+	color: #000; 
+	text-decoration: none; 
+	font-weight: normal;
+}
 </style>
 </head>
 <body>
@@ -94,7 +100,7 @@ body {
  				</ul>
      	</div>
      	<div class="col-md-6">
-  			<h4>Models</h4>
+  			<h4>Learned Models</h4>
      			<ul>
 				<%
 					if (modelFileNames != null) {
@@ -113,7 +119,7 @@ body {
 
 <div id="footer">
 	<div class="container text-center">
-	<a name="citation"><sup>1</sup> Raleigh, Clionadh, Andrew Linke, Håvard Hegre and Joakim Karlsen. 2010. 
+	<a name="citation" class="unstyled-anchor"><sup>1</sup> Raleigh, Clionadh, Andrew Linke, Håvard Hegre and Joakim Karlsen. 2010. 
 	Introducing ACLED-Armed Conflict Location and Event Data. Journal of Peace Research 47(5) 651-660.</a>
 	</div>
 </div>    	

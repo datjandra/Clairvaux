@@ -92,7 +92,6 @@ public class ConflictPredictionEngine {
         if(fieldName != null) inner.put("fieldName", fieldName);
         if(fieldType != null) inner.put("fieldType", fieldType);
         if(encoderType != null) inner.put("encoderType", encoderType);
-
         return map;
     }
 
@@ -142,7 +141,6 @@ public class ConflictPredictionEngine {
 		p.setParameterByKey(KEY.SEED, 1960);
 		
 		// SpatialPooler specific
-		p.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[] { 2048 });
 		p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
 		p.setParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 40.0d);
 		p.setParameterByKey(KEY.SEED, 1956);

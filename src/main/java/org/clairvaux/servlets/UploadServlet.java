@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URLEncoder;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -82,15 +81,18 @@ public class UploadServlet extends HttpServlet {
                 	InputStream inputStream = item.getInputStream();
                 	OutputStream outputStream = 
                             new FileOutputStream(new File(path, itemName));
-                	
-                	int read = 0;
-            		byte[] bytes = new byte[2048];
-            		while ((read = inputStream.read(bytes)) != -1) {
-            			outputStream.write(bytes, 0, read);
-            		}
-                    inputStream.close();
-                    outputStream.close();
-                    
+                	try {
+						int read = 0;
+						byte[] bytes = new byte[4096];
+						while ((read = inputStream.read(bytes)) != -1) {
+							outputStream.write(bytes, 0, read);
+						}
+					} finally {
+						try {
+							inputStream.close();
+							outputStream.close();
+						} catch (Exception e) {}
+					}
                     csvFile = itemName;
                     break;
                 }

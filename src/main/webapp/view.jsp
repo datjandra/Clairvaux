@@ -6,12 +6,11 @@
 		title = FileUtils.extractBaseName(model);
 	}
 %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html class="ocks-org do-not-copy">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-
+<meta charset="utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
 <title>Co-occurrence Matrix</title>
 <style>
 @import url(https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css);
@@ -40,6 +39,10 @@ text.active {
 	fill: red;
 }
 
+#matrix {
+	text-align: center;
+}
+
 div.tooltip {	
 	font-size: 1em;
 	font-weight: bold;
@@ -49,6 +52,7 @@ div.tooltip {
     padding: 15px;
   	margin: 1em 0 3em;
     color: #fff;
+    pointer-events: none;
   	background: #075698;;
   	background:-webkit-gradient(linear, 0 0, 0 100%, from(#2e88c4), to(#075698));
   	background:-moz-linear-gradient(#2e88c4, #075698);
@@ -59,17 +63,18 @@ div.tooltip {
   	border-radius:10px;			
 }
 </style>
+</head>
 <body>
 	<div class="container">
 		<div class="row">
 			<h1><%= title %></h1>
 			<p>
-			Predictions results are visualized as a co-occurrence matrix.
-			Rows are the actual values, while columns are the next step's predicted values.
-			Each cell represents two events - actual event and predicted event.
+			Sequence prediction results are visualized as a co-occurrence matrix.
+			Rows are the actual events, while columns are the next step's predicted events.
+			Each cell represents an actual event followed by the predicted event.
 			Darker cells indicate actual and predicted events that occur together more frequently.
-			For example, if event "Violence against civilians" is predicted to occur many times after "Riots/Protests", then the cell has a darker color.
-			But If "Violence against civilians" is predicted to occur zero or few times after "Riots/Protests", then the cell is blank or transparent.
+			For example, if sequence "Riots/Protests" followed by "Violence against civilians" is predicted to occur many times, then the cell has a darker color.
+			If "Riots/Protests" followed by "Violence against civilians" is predicted to occur zero or few times", then the cell is blank or transparent.
 			</p>
 		</div>
 		<div class="row">
@@ -82,7 +87,7 @@ div.tooltip {
 						</select>
 					</p>
 				</aside>
-				<div id="matrix" style="text-align: center;"></div>
+				<div id="matrix"></div>
 			</div>
 		</div>
 	</div>
@@ -90,8 +95,7 @@ div.tooltip {
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script
 	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"
-	charset="utf-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
 <script>
 var margin = {
         top: 240,
@@ -136,7 +140,7 @@ d3.json('<%= model %>',
                 });
             });
 
-            // Convert links to matrix; count character occurrences.
+            // Convert links to matrix;
             var zMax = 1;
             graph.links.forEach(function(link) {
             	matrix[link.source][link.target].z = link.value;
@@ -155,9 +159,6 @@ d3.json('<%= model %>',
                     }),
                 count: d3.range(n).sort(function(a, b) {
                     return nodes[b].count - nodes[a].count;
-                }),
-                group: d3.range(n).sort(function(a, b) {
-                    return nodes[b].group - nodes[a].group;
                 })
             };
 
@@ -247,7 +248,7 @@ d3.json('<%= model %>',
                 div.transition()		
                 	.duration(200)		
                 	.style("opacity", .9);
-                div.html("Count: " + p.z + "<br/>" + "Probability: " + p.probability)	
+                div.html("Count: " + p.z + "<br/>" + "Final Probability: " + p.probability)	
                 	.style("left", (d3.event.pageX) + "px")		
                 	.style("top", (d3.event.pageY - 28) + "px");
             }
