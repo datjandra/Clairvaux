@@ -59,6 +59,7 @@ public class ConflictPredictionEngine {
         network.start();
         Region r1 = network.lookup("r1");
         r1.lookup("l1").getLayerThread().join();
+        network.halt();
         LOGGER.log(Level.INFO, "network halted");
 	}
 	

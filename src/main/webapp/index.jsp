@@ -56,11 +56,17 @@ body {
 	height: auto;
 }
 
-.unstyled-anchor,
-.unstyled-anchor:hover {
-	color: #000; 
-	text-decoration: none; 
-	font-weight: normal;
+#citation,
+#citation:hover {
+	color:#000000 !important;
+	text-decoration: none;
+	outline: none;
+}
+
+#citation:before {
+	font-size: smaller;
+	margin-left: .5em;
+	vertical-align: super;
 }
 </style>
 </head>
@@ -77,7 +83,7 @@ body {
           Realtime events prediction
           <br/>
           <small class="text-muted">
-          Uses Numenta's brain-inspired technology to find patterns in armed conflict data, make predictions, and detect anomalies. 
+          Predict conflict events with Numenta's brain-inspired technology. 
           </small>
         </h1>
       </div>
@@ -94,9 +100,9 @@ body {
  					1.  Download realtime <a href="http://www.acleddata.com/data/">data</a> in CSV format from ACLED<sup><a href="#citation">1</a></sup>.
  					Monthly data is recommended, as complete data will likely cause memory outage on the server.
  					</li>
- 					<li>2.  Upload CSV data file <a href="upload">here.</a></li>
- 					<li>3.  A model viewer link is created after successful upload.</li>
- 					<li>4.  Click model viewer link after a few minutes.</li>
+ 					<li>2.  Upload CSV data file <a href="upload">here</a>.</li>
+ 					<li>3.  A viewer link appears after successful upload.</li>
+ 					<li>4.  Wait for a few minutes as data is being processed. Then click on the link.</li>
  				</ul>
      	</div>
      	<div class="col-md-6">
@@ -118,9 +124,11 @@ body {
 </div>  
 
 <div id="footer">
-	<div class="container text-center">
-	<a name="citation" class="unstyled-anchor"><sup>1</sup> Raleigh, Clionadh, Andrew Linke, Håvard Hegre and Joakim Karlsen. 2010. 
+	<div class="container text-centered">
+		<div class="row">
+			<a id="citation"><sup>1</sup> Raleigh, Clionadh, Andrew Linke, Håvard Hegre and Joakim Karlsen. 2010. 
 	Introducing ACLED-Armed Conflict Location and Event Data. Journal of Peace Research 47(5) 651-660.</a>
+		</div>
 	</div>
 </div>    	
 </body>
