@@ -17,11 +17,11 @@ public class ConfusionMatrix {
 	
 	public void update(Object actual, Object predicted) {
 		if (lastPredicted != null) {
-			if (!predictionMatrix.containsKey(lastPredicted.toString(), actual.toString())) {
-				predictionMatrix.put(lastPredicted.toString(), actual.toString(), 1);
+			if (!predictionMatrix.containsKey(lastPredicted, actual)) {
+				predictionMatrix.put(lastPredicted, actual, 1);
 			} else {
-				Integer count = predictionMatrix.get(lastPredicted.toString(), actual.toString());
-				predictionMatrix.put(lastPredicted.toString(), actual.toString(), count+1);
+				Integer count = predictionMatrix.get(lastPredicted, actual);
+				predictionMatrix.put(lastPredicted, actual, count+1);
 			}
 		}
 		lastPredicted = predicted;
