@@ -11,6 +11,11 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import org.clairvaux.utils.NetworkUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -27,12 +32,9 @@ import org.numenta.nupic.encoders.SDRCategoryEncoder;
 import org.numenta.nupic.network.Inference;
 import org.numenta.nupic.network.Network;
 
-import com.opencsv.CSVReader;
-
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 import rx.Subscriber;
+
+import com.opencsv.CSVReader;
 
 /**
  * Unit test for simple App.
@@ -51,6 +53,54 @@ public class NetworkConfigTest extends TestCase {
 	public static Test suite() {
 		return new TestSuite(NetworkConfigTest.class);
 	}	
+	
+	public void testSanity() {
+		Parameters p = getDefaultParameters();
+		Map<String, Map<String, Object>> fieldEncodings = NetworkUtils.setupMap(
+                null,
+                8, // n
+                3, // w
+                0.0, 8.0, 0, 1, Boolean.TRUE, null, Boolean.TRUE,
+                "dayOfWeek", "number", "ScalarEncoder");
+		Parameters encoderParams = Parameters.getEncoderDefaultParameters();
+		encoderParams.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        p = p.union(encoderParams);
+        
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Anomaly.Mode.PURE);
+        
+        Network n = Network.create("test network", p)
+                .add(Network.createRegion("r1")
+                        .add(Network.createLayer("1", p)
+                                .alterParameter(Parameters.KEY.AUTO_CLASSIFY, Boolean.TRUE))
+                        .add(Network.createLayer("2", p)
+                                .add(Anomaly.create(params)))
+                        .add(Network.createLayer("3", p)
+                                .add(new TemporalMemory()))
+                        .add(Network.createLayer("4", p)
+                                .add(new SpatialPooler())
+                                .add(MultiEncoder.builder().name("").build()))
+                        .connect("1", "2")
+                        .connect("2", "3")
+                        .connect("3", "4"));
+
+        AggregateSubscriber subscriber = new AggregateSubscriber("dayOfWeek", new String[]{});
+        n.observe().subscribe(subscriber);
+
+        double[] primes = new double[]{1d,2d,3d,5d,7d};
+        final int NUM_CYCLES = 100;
+        Map<String, Object> multiInput = new HashMap<>();
+        for(int i = 0;i < NUM_CYCLES;i++) {
+            for(int j = 0; j < primes.length; j++) {
+                multiInput.put("dayOfWeek", primes[j]);
+                n.compute(multiInput);
+            }
+            n.reset();
+        }
+        
+        ConfusionMatrix cm = subscriber.getConfusionMatrix();
+        assertTrue(cm.getAccuracy() > 0.4d);
+	}
 	
 	public void testPrediction() throws InterruptedException, IOException {
 		Parameters parameters = getDefaultParameters();
@@ -182,6 +232,43 @@ public class NetworkConfigTest extends TestCase {
 		return p;
 	}
 
+	static Parameters getDayOfWeekParameters() {
+        Parameters parameters = Parameters.getAllDefaultParameters();
+        parameters.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[] { 8 });
+        parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 20 });
+        parameters.setParameterByKey(KEY.CELLS_PER_COLUMN, 6);
+        
+        //SpatialPooler specific
+        parameters.setParameterByKey(KEY.POTENTIAL_RADIUS, 12);//3
+        parameters.setParameterByKey(KEY.POTENTIAL_PCT, 0.5);//0.5
+        parameters.setParameterByKey(KEY.GLOBAL_INHIBITIONS, false);
+        parameters.setParameterByKey(KEY.LOCAL_AREA_DENSITY, -1.0);
+        parameters.setParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 5.0);
+        parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 1.0);
+        parameters.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
+        parameters.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        parameters.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
+        parameters.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.1);
+        parameters.setParameterByKey(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
+        parameters.setParameterByKey(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
+        parameters.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 10);
+        parameters.setParameterByKey(KEY.MAX_BOOST, 10.0);
+        parameters.setParameterByKey(KEY.SEED, 42);
+        parameters.setParameterByKey(KEY.SP_VERBOSITY, 0);
+        
+        //Temporal Memory specific
+        parameters.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.2);
+        parameters.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.8);
+        parameters.setParameterByKey(KEY.MIN_THRESHOLD, 5);
+        parameters.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 6);
+        parameters.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.05);
+        parameters.setParameterByKey(KEY.PERMANENCE_DECREMENT, 0.05);
+        parameters.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 4);
+        
+        return parameters;
+    }
+    
+	
 	Parameters getDefaultParameters() {
 		Parameters parameters = Parameters.getAllDefaultParameters();
 		parameters.setParameterByKey(KEY.CELLS_PER_COLUMN, 6);
@@ -228,7 +315,7 @@ public class NetworkConfigTest extends TestCase {
 					.append(i.getRecordNum())
 					.append(", ")
 					.append("actual=")
-					.append(i.getClassification("EVENT_TYPE").getActualValue(0))
+					.append(i.getClassifierInput().get("EVENT_TYPE").get("inputValue"))
 					.append(", predicted=")
 					.append(i.getClassification("EVENT_TYPE").getMostProbableValue(1));	
 				LOGGER.log(Level.FINE, sb.toString());						

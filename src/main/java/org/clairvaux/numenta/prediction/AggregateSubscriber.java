@@ -32,6 +32,7 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 	private final String[] extraFields;
 	private final TwoKeyHashMap<String,String,Integer> mutualCounts;
 	private final TwoKeyHashMap<String,String,Double> finalProbDist;
+	private final ConfusionMatrix confusionMatrix;
 	private final List<String[]> entryList;
 	
 	private final static Logger LOGGER = Logger.getLogger(AggregateSubscriber.class.getName()); 
@@ -42,6 +43,7 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 		this.predictedField = predictedField;
 		this.extraFields = extraFields;	
 		this.entryList = new ArrayList<String[]>();
+		this.confusionMatrix = new ConfusionMatrix();
 		
 		header = new String[extraFields.length + 4];
 		header[0] = "RECORD_NUM";
@@ -67,10 +69,11 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 	public void onNext(Inference inference) {
 		Integer recordNum = inference.getRecordNum();
 		ClassifierResult<Object> classification = inference.getClassification(predictedField);
-		Object actual = classification.getActualValue(0);
+		Object actual = inference.getClassifierInput().get(predictedField).get("inputValue");
 		Object predicted = classification.getMostProbableValue(1);
+		confusionMatrix.incrementTotal();
 		
-		if (actual == null || predicted == null) {
+		if (predicted == null) {
 			return;
 		}
 		
@@ -82,6 +85,7 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 			Integer count = mutualCounts.get(actualValue, predictedValue);
 			mutualCounts.put(actualValue, predictedValue, count + 1);
 		}
+		confusionMatrix.update(actualValue, predictedValue);
 		
 		double[] stats = classification.getStats(1);
 		Object[] actualValues = classification.getActualValues();
@@ -143,5 +147,9 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 				} catch (Exception e) {}
 			}
 		}
+	}
+	
+	public ConfusionMatrix getConfusionMatrix() {
+		return confusionMatrix;
 	}
 }
