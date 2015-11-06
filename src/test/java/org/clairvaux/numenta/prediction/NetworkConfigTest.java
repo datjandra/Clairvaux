@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import junit.framework.Test;
@@ -131,7 +132,7 @@ public class NetworkConfigTest extends TestCase {
         }
         long endTime = System.nanoTime();
         double duration = (endTime - startTime) / 1000000000.0;
-        System.out.println(String.format("%d training cycles completed in %f seconds", TRAINING_CYCLES, duration));
+        LOGGER.log(Level.INFO, String.format("%d training cycles completed in %f seconds", TRAINING_CYCLES, duration));
         
         // Test on a monthly file other than the one used for training
         startTime = System.nanoTime();
@@ -144,9 +145,13 @@ public class NetworkConfigTest extends TestCase {
         }
         endTime = System.nanoTime();
         duration = (endTime - startTime) / 1000000000.0;
-        System.out.println(String.format("Testing completed in %f seconds", duration));
-        System.out.println("Accuracy: " + subscriber.getConfusionMatrix().getAccuracy());
-		assertTrue(true);
+        LOGGER.log(Level.INFO, String.format("Testing completed in %f seconds", duration));
+        
+        ConfusionMatrix cm = subscriber.getConfusionMatrix();
+        Double accuracy = cm.getAccuracy();
+        LOGGER.log(Level.INFO, "Accuracy: " + accuracy);
+        // 40% accuracy at least with this train/test set
+        assertTrue(accuracy > 0.4d);
 	}
 
 	MultiEncoder initEncoder() {
