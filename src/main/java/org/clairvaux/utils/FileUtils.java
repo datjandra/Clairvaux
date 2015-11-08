@@ -39,8 +39,7 @@ public class FileUtils {
 	
 	public static List<String> getFileNames(String dirName) {
 		List<String> fileNames = new ArrayList<String>();
-		File fileDir = new File(dirName);
-		File[] files = fileDir.listFiles();
+		File[] files = filesByLastModified(dirName);
 		if (files != null) {
 			for (File file : files) {
 				fileNames.add(file.getName());

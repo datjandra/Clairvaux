@@ -252,13 +252,13 @@ function refreshDashboard(model) {
 function refreshAggregateMatrix(model, element) {
 	var graph = model.aggregate;
 	var margin = {
-	        top: 240,
+	        top: 280,
 	        right: 0,
 	        bottom: 80,
-	        left: 240
+	        left: 280
 	    },
-	    width = 640,
-	    height = 640;
+	    width = 720,
+	    height = 720;
 
 	var x = d3.scale.ordinal().rangeBands([0, width]),
 	    z = d3.scale.linear()
@@ -330,7 +330,7 @@ function refreshAggregateMatrix(model, element) {
 		.attr("x2", width);
 
 	row.append("text")
-		.attr("font-size", "12px")
+		.attr("font-size", "10px")
 		.attr("x", -6)
 		.attr("y", x.rangeBand() / 2)
 		.attr("dy", ".32em")
@@ -350,7 +350,7 @@ function refreshAggregateMatrix(model, element) {
 		.attr("x1", -width);
 
 	column.append("text")
-		.attr("font-size", "12px")
+		.attr("font-size", "10px")
 		.attr("x", 6)
 		.attr("y", x.rangeBand() / 2)
 		.attr("dy", ".32em")
@@ -412,13 +412,13 @@ function refreshAggregateMatrix(model, element) {
 function refreshConfusionMatrix(model, element) {
 	var graph = model.quality;
 	var margin = {
-	        top: 240,
+	        top: 280,
 	        right: 0,
 	        bottom: 80,
-	        left: 240
+	        left: 280
 	    },
-	    width = 640,
-	    height = 640;
+	    width = 720,
+	    height = 720;
 
 	var x = d3.scale.ordinal().rangeBands([0, width]),
 	    z = d3.scale.linear()
@@ -484,7 +484,7 @@ function refreshConfusionMatrix(model, element) {
         	}).each(setupQualityRow);
 
 	row.append("text")
-		.attr("font-size", "12px")
+		.attr("font-size", "10px")
 		.attr("x", -6)
 		.attr("y", x.rangeBand() / 2)
 		.attr("dy", ".32em")
@@ -501,7 +501,7 @@ function refreshConfusionMatrix(model, element) {
         	});
 
 	column.append("text")
-		.attr("font-size", "12px")
+		.attr("font-size", "10px")
 		.attr("x", 6)
 		.attr("y", x.rangeBand() / 2)
 		.attr("dy", ".32em")

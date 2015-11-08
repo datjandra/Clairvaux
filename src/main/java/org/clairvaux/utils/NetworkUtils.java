@@ -211,9 +211,9 @@ public class NetworkUtils {
 				try {
 					DateTime eventDate = formatter.parseDateTime(nextLine[2]);
 					multiInput.put("EVENT_DATE", eventDate);        	
-					multiInput.put("EVENT_TYPE", nextLine[5]);
-					multiInput.put("INTERACTION", nextLine[12]);	        	        	
-					multiInput.put("LOCATION", nextLine[17]);
+					multiInput.put("EVENT_TYPE", nextLine[5].trim().toUpperCase());
+					multiInput.put("INTERACTION", nextLine[12].trim());	        	        	
+					multiInput.put("LOCATION", nextLine[17].trim().toUpperCase());
 					data.add(multiInput);
 				} catch (IllegalFieldValueException e) {
 					LOGGER.log(Level.WARNING, String.format("Skipped line with bad date format %s", Arrays.toString(nextLine)));

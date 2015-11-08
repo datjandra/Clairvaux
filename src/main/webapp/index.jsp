@@ -143,7 +143,7 @@ body {
   		<div class="col-md-6">
   			<h4>Technical Description</h4>
   			<div>
-  			This applications uses Hierarchical Temporal Memory<sup><a href="#citation_2">2</a></sup> (HTM) technology to make predictions about conflict events.
+  			This application uses Hierarchical Temporal Memory<sup><a href="#citation_2">2</a></sup> (HTM) technology to make predictions about conflict events.
   			Refer to the HTM white paper for technical details.
   			Learning and prediction in Clairvaux is triggered by data file uploads.
   			After a new data file is uploaded, the system feeds data into an HTM network which is trained for some number of iterations. 
