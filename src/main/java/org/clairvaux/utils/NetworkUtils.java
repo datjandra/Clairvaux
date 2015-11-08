@@ -1,13 +1,57 @@
 package org.clairvaux.utils;
 
-import java.util.HashMap;
-import java.util.Map;
+import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.joda.time.DateTime;
+import org.joda.time.IllegalFieldValueException;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.algorithms.Anomaly;
+import org.numenta.nupic.algorithms.Anomaly.Mode;
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.encoders.DateEncoder;
+import org.numenta.nupic.encoders.MultiEncoder;
+import org.numenta.nupic.encoders.SDRCategoryEncoder;
+import org.numenta.nupic.network.Network;
 import org.numenta.nupic.util.Tuple;
 
+import com.opencsv.CSVReader;
+
 public class NetworkUtils {
+	
+	private final static Logger LOGGER = Logger.getLogger(NetworkUtils.class.getName());
+	
+	public static Network createSimpleNetwork() {
+		Parameters parameters = getNetworkHarnessParameters();
+		parameters = parameters.union(getSwarmParameters());
+		
+		Map<String, Object> params = new HashMap<String, Object>();
+        params.put(KEY_MODE, Mode.PURE);
+        
+        Network network = Network.create("Network Prediction", parameters)
+			    .add(Network.createRegion("r1")
+			        .add(Network.createLayer("l1", parameters)
+			            .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+			            .add(Anomaly.create(params))
+			            .add(new TemporalMemory())
+			            .add(new SpatialPooler())
+			            .add(initAcledEncoder()))); 
+        return network;
+	}
+		
 	public static Map<String, Map<String, Object>> setupMap(
 			Map<String, Map<String, Object>> map, int n, int w, double min,
 			double max, double radius, double resolution, Boolean periodic,
@@ -114,6 +158,77 @@ public class NetworkUtils {
 		return p;
 	}	
 	
+	private static MultiEncoder initAcledEncoder() {
+		MultiEncoder multiEncoder = MultiEncoder.builder()
+				.name("")
+				.build();
+		
+		DateEncoder dateEncoder = DateEncoder.builder()
+				.timeOfDay(21, 1)
+				.dayOfWeek(21, 1)
+				.weekend(21)
+				.forced(true)
+				.build();
+		multiEncoder.addEncoder("EVENT_DATE", dateEncoder);
+		
+		SDRCategoryEncoder sdrCategoryEncoder = SDRCategoryEncoder.builder()
+                .n(121)
+                .w(21)                                
+                .forced(true)
+                .build();
+		multiEncoder.addEncoder("EVENT_TYPE", sdrCategoryEncoder);		
+		
+		sdrCategoryEncoder = SDRCategoryEncoder.builder()
+				.n(121)
+				.w(21)				
+				.forced(true)
+				.build();
+		multiEncoder.addEncoder("INTERACTION", sdrCategoryEncoder);
+				
+		sdrCategoryEncoder = SDRCategoryEncoder.builder()
+				.n(121)
+				.w(21)				
+				.forced(true)
+				.build();
+		multiEncoder.addEncoder("LOCATION", sdrCategoryEncoder);
+		return multiEncoder;
+	}
+	
+	public static List<Map<String,Object>> loadAcledData(String file, String dateFormat) {
+		if (dateFormat == null) {
+			dateFormat = "dd/MM/YY";
+		}
+		CSVReader reader = null;
+        List<Map<String, Object>> data = new ArrayList<Map<String,Object>>();
+		try {
+			reader = new CSVReader(new FileReader(file));
+			reader.readNext();        
+			
+			DateTimeFormatter formatter = DateTimeFormat.forPattern(dateFormat);        
+			String [] nextLine;
+			while ((nextLine = reader.readNext()) != null) {     
+				Map<String, Object> multiInput = new HashMap<>();
+				try {
+					DateTime eventDate = formatter.parseDateTime(nextLine[2]);
+					multiInput.put("EVENT_DATE", eventDate);        	
+					multiInput.put("EVENT_TYPE", nextLine[5]);
+					multiInput.put("INTERACTION", nextLine[12]);	        	        	
+					multiInput.put("LOCATION", nextLine[17]);
+					data.add(multiInput);
+				} catch (IllegalFieldValueException e) {
+					LOGGER.log(Level.WARNING, String.format("Skipped line with bad date format %s", Arrays.toString(nextLine)));
+				}        					
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				reader.close();
+			} catch (Exception e) {}
+		}
+        return data;
+	}
+			
 	private static Map<String, Map<String, Object>> getAcledEncodingMap() {
         Map<String, Map<String, Object>> fieldEncodings = setupMap(
                 null,
@@ -147,5 +262,5 @@ public class NetworkUtils {
         fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_DOFW.getFieldName(), new Tuple(21, 1d)); // Date of week
         fieldEncodings.get("EVENT_DATE").put(KEY.DATEFIELD_PATTERN.getFieldName(), "YYYY-MM-dd");
         return fieldEncodings;
-    }
+    }		
 }

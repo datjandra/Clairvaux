@@ -62,4 +62,16 @@ public class ConfusionMatrix {
 		}
 		return accuracy;
 	}
+	
+	public Set<Pair<Object,Object>> getKeyPairs() {
+		return predictionMatrix.keySet();
+	}
+	
+	public Integer lookup(Object predicted, Object actual) {
+		return predictionMatrix.get(predicted, actual);
+	}
+	
+	public TwoKeyHashMap<Object,Object,Integer> getPredictionMatrix() {
+		return predictionMatrix;
+	}
 }

@@ -11,7 +11,7 @@
 <head>
 <meta charset="utf-8"></meta>
 <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
-<title>Co-occurrence Matrix</title>
+<title>Predictive Visualization of Armed Conflict Events</title>
 <style>
 @import url(https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css);
 
@@ -39,10 +39,6 @@ text.active {
 	fill: red;
 }
 
-#matrix {
-	text-align: center;
-}
-
 div.tooltip {	
 	font-size: 1em;
 	font-weight: bold;
@@ -62,228 +58,501 @@ div.tooltip {
   	-moz-border-radius:10px;
   	border-radius:10px;			
 }
+
+.stat {
+	font-size: 40px;
+}
+
+.panel-blue {
+    border-color: #337AB7;
+}
+
+.panel-blue > .panel-heading {
+    border-color: #337AB7;
+    color: #fff;
+    background-color: #337AB7;
+}
+
+.panel-green {
+    border-color: #5cb85c;
+}
+
+.panel-green > .panel-heading {
+    border-color: #5cb85c;
+    color: #fff;
+    background-color: #5cb85c;
+}
+
+.panel-red {
+    border-color: #d9534f;
+}
+
+.panel-red > .panel-heading {
+    border-color: #d9534f;
+    color: #fff;
+    background-color: #d9534f;
+}
+
+.panel-orange {
+    border-color: #FFAB24;
+}
+
+.panel-orange > .panel-heading {
+    border-color: #FFAB24;
+    color: #fff;
+    background-color: #FFAB24;
+}
+
+.right-align {
+	text-align: right;
+}
+
+.center-align {
+	text-align: center;
+}
 </style>
 </head>
 <body>
 	<div class="container">
 		<div class="row">
-			<h1><%= title %></h1>
-			<p>
-			Sequence prediction results are visualized as a co-occurrence matrix.
-			Rows are the actual events, while columns are the next step's predicted events.
-			Each cell represents an actual event followed by the predicted event.
-			Darker cells indicate actual and predicted events that occur together more frequently.
-			For example, if sequence "Riots/Protests" followed by "Violence against civilians" is predicted to occur many times, then the cell has a darker color.
-			If "Riots/Protests" followed by "Violence against civilians" is predicted to occur zero or few times", then the cell is blank or transparent.
-			</p>
+			<div class="col-xs-12 col-sm-12 col-md-12">
+				<h1 class="center-align"><%= title %></h1>
+			</div>
 		</div>
 		<div class="row">
+			<h2>Dashboard</h2>
+			<div class="col-xs-3 col-sm-3 col-md-3">
+				<div class="panel panel-blue">
+                	<div class="panel-heading">
+                		<div class="row">
+                        	<div class="col-xs-12 right-align">
+                        		<div id="correct_stat" class="stat"></div>
+                       			<div>Correct</div>
+                           	</div>
+                        </div>        
+                   	</div>
+                   	<div class="panel-footer">
+                        <span class="pull-left">Correctly Predicted Rows</span>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>        
+			</div>
+			<div class="col-xs-3 col-sm-3 col-md-3">
+				<div class="panel panel-green">
+                	<div class="panel-heading">
+                		<div class="row">
+                        	<div class="col-xs-12 right-align">
+                				<div id="predicted_stat" class="stat"></div>
+                       			<div>Predicted</div>
+                       		</div>
+                       	</div>
+                   	</div>
+                   	<div class="panel-footer">
+                        <span class="pull-left">Predicted Rows</span>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+			</div>
+			<div class="col-xs-3 col-sm-3 col-md-3">
+				<div class="panel panel-orange">
+                	<div class="panel-heading">
+                		<div class="row">
+                        	<div class="col-xs-12 right-align">
+                				<div id="total_stat" class="stat"></div>
+                       			<div>Total</div>
+                       		</div>
+                       	</div>
+                   	</div>
+                   	<div class="panel-footer">
+                        <span class="pull-left">Row Count * Training Cycles</span>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+			</div>
+			<div class="col-xs-3 col-sm-3 col-md-3">
+				<div class="panel panel-red">
+                	<div class="panel-heading">
+                		<div class="row">
+                        	<div class="col-xs-12 right-align">
+                				<div id="accuracy_stat" class="stat"></div>
+                       			<div>Accuracy</div>
+                       		</div>
+                       	</div>
+                   	</div>
+                   	<div class="panel-footer">
+                        <span class="pull-left">Correct / Predicted</span>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+			</div>
+		</div>
+		<div class="row">
+			<h2>Co-occurence Matrix</h2>
+			<p>
+			Shows the number of times that actual and predicted events occur together.
+			Rows are actual events, and columns are predicted events for the next step.
+			Hover over each cell to see the predicted counts and final probabilities.
+			Probability distribution changes as the network observes more data.
+			</p>
 			<div class="col-xs-12 col-sm-12 col-md-12">
-				<aside style="margin-top: 80px;">
-					<p>
-						Order: <select id="order">
-							<option value="name">by Name</option>
-							<option value="count">by Frequency</option>
-						</select>
-					</p>
-				</aside>
-				<div id="matrix"></div>
+				<div id="aggregate" class="center-align"></div>
+			</div>
+		</div>
+		<div class="row">
+			<h2>Confusion Matrix</h2>
+			<p>
+			Shows the accuracy of the prediction engine.
+			Rows are predicted events, and columns are actual events for the next step.
+			Correctly predicted events are counted in diagonal entries indicated by green text.
+			</p>
+			<div class="col-xs-12 col-sm-12 col-md-12">
+				<div id="quality" class="center-align"></div>
 			</div>
 		</div>
 	</div>
+	<div id="tooltip-container"></div>
 </body>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script
 	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+
 <script>
-var margin = {
-        top: 240,
-        right: 0,
-        bottom: 80,
-        left: 240
-    },
-    width = 640,
-    height = 640;
-
-var x = d3.scale.ordinal().rangeBands([0, width]),
-    z = d3.scale.linear()
-    .domain([0, 4]).clamp(true),
-    c = d3.scale.category10().domain(
-        d3.range(10));
-
-var svg = d3.select("#matrix").append("svg")
-	.attr("width", width + margin.left + margin.right)
-	.attr("height", height + margin.top + margin.bottom).style("margin-left", -margin.left + "px").append("g")
-	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-var div = d3.select("body").append("div")	
+var tooltip = d3.select("#tooltip-container").append("div")	
 	.attr("class", "tooltip")				
 	.style("opacity", 1);
 
-d3.json('<%= model %>', 
-		function(graph) {
-            var matrix = [],
-                nodes = graph.nodes,
-                n = nodes.length;
+function refreshAll(url, aggregateId, qualityId) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', encodeURI(url));
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+    	var model = JSON.parse(xhr.responseText);
+    	refreshDashboard(model);
+    	refreshAggregateMatrix(model, aggregateId);
+    	refreshConfusionMatrix(model, qualityId);
+    } else {
+        console.log('Request failed.  Returned status of ' + xhr.status);
+    }
+  };
+  xhr.send();
+}
+	
+function round(value, decimals) {
+	return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+}	
+	
+function refreshDashboard(model) {
+	$("#correct_stat").text(model.quality.correct);	
+	$("#predicted_stat").text(model.quality.predicted);	
+	$("#total_stat").text(model.quality.total);	
+	$("#accuracy_stat").text(round(model.quality.accuracy,5));	
+}	
+	
+function refreshAggregateMatrix(model, element) {
+	var graph = model.aggregate;
+	var margin = {
+	        top: 240,
+	        right: 0,
+	        bottom: 80,
+	        left: 240
+	    },
+	    width = 640,
+	    height = 640;
 
-            // Compute index per node.
-            nodes.forEach(function(node, i) {
-                node.index = i;
-                node.count = 0;
-                matrix[i] = d3.range(n).map(function(j) {
-                    return {
-                        x: j,
-                        y: i,
-                        z: 0
-                    };
-                });
-            });
-
-            // Convert links to matrix;
-            var zMax = 1;
-            graph.links.forEach(function(link) {
-            	matrix[link.source][link.target].z = link.value;
-            	matrix[link.source][link.target].probability = link.probability;
-            	nodes[link.source].count += link.value;
-                nodes[link.target].count += link.value;
-                zMax = Math.max(zMax, link.value);
-            });
-
-            // Precompute the orders.
-            var orders = {
-                name: d3.range(n).sort(
-                    function(a, b) {
-                        return d3.ascending(nodes[a].name,
-                            nodes[b].name);
-                    }),
-                count: d3.range(n).sort(function(a, b) {
-                    return nodes[b].count - nodes[a].count;
-                })
+	var x = d3.scale.ordinal().rangeBands([0, width]),
+	    z = d3.scale.linear()
+	    .domain([0, 4]).clamp(true),
+	    c = d3.scale.category10().domain(
+	        d3.range(10));
+	
+	var svg = d3.select(element).append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom).style("margin-left", -margin.left + "px").append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	
+	var matrix = [],
+    	nodes = graph.nodes,
+    	n = nodes.length;
+	
+	// Compute index per node.
+    nodes.forEach(function(node, i) {
+        node.index = i;
+        node.count = 0;
+        matrix[i] = d3.range(n).map(function(j) {
+            return {
+                x: j,
+                y: i,
+                z: 0
             };
-
-            // The default sort order.
-            x.domain(orders.name);
-
-            svg.append("rect")
-            	.attr("class", "background")
-            	.attr("width", width)
-            	.attr("height", height);
-
-            var row = svg.selectAll(".row").data(matrix).enter()
-                .append("g")
-                .attr("class", "row")
-                .attr("transform",
-                    function(d, i) {
-                        return "translate(0," + x(i) + ")";
-                    }).each(row);
-
-            row.append("line")
-            	.attr("x2", width);
-
-            row.append("text")
-            	.attr("font-size", "12px")
-            	.attr("x", -6)
-            	.attr("y", x.rangeBand() / 2)
-            	.attr("dy", ".32em")
-            	.attr("text-anchor", "end").text(function(d, i) {
-                return nodes[i].name;
-            });
-
-            var column = svg.selectAll(".column").data(matrix)
-                .enter().append("g")
-                .attr("class", "column")
-                .attr("transform",
-                    function(d, i) {
-                        return "translate(" + x(i) + ")rotate(-90)";
-                    });
-
-            column.append("line")
-            	.attr("x1", -width);
-
-            column.append("text")
-            	.attr("font-size", "12px")
-            	.attr("x", 6)
-            	.attr("y", x.rangeBand() / 2)
-            	.attr("dy", ".32em")
-            	.attr("text-anchor", "start").text(function(d, i) {
-                return nodes[i].name;
-            });
-
-            function row(row) {
-                var cell = d3
-                    .select(this)
-                    .selectAll(".cell")
-                    .data(row.filter(function(d) {
-                        return d.z;
-                    }))
-                    .enter()
-                    .append("rect")
-                    .attr("class", "cell")
-                    .attr("x", function(d) {
-                        return x(d.x);
-                    })
-                    .attr("width", x.rangeBand())
-                    .attr("height", x.rangeBand())
-                    .style("fill-opacity", function(d) {
-                    	return d.z / zMax;
-                    })
-                    .style(
-                        "fill",
-                        function(d) {
-                            return nodes[d.x].group == nodes[d.y].group ? c(nodes[d.x].group) : null;
-                        }).on("mouseover", mouseover).on(
-                        "mouseout", mouseout);
-            }
-
-            function mouseover(p) {
-                d3.selectAll(".row text").classed("active",
-                    function(d, i) {
-                        return i == p.y;
-                    });
-                d3.selectAll(".column text").classed("active",
-                    function(d, i) {
-                        return i == p.x;
-                    });
-                div.transition()		
-                	.duration(200)		
-                	.style("opacity", .9);
-                div.html("Count: " + p.z + "<br/>" + "Final Probability: " + p.probability)	
-                	.style("left", (d3.event.pageX) + "px")		
-                	.style("top", (d3.event.pageY - 28) + "px");
-            }
-
-            function mouseout() {
-                d3.selectAll("text").classed("active", false);
-                div.transition()		
-                	.duration(500)		
-                	.style("opacity", 0);
-            }
-
-            d3.select("#order").on("change", function() {
-                order(this.value);
-            });
-
-            function order(value) {
-                x.domain(orders[value]);
-                var t = svg.transition().duration(1000);
-
-                t.selectAll(".row").delay(function(d, i) {
-                    return x(i) * 4;
-                }).attr("transform", function(d, i) {
-                    return "translate(0," + x(i) + ")";
-                }).selectAll(".cell").delay(function(d) {
-                    return x(d.x) * 4;
-                }).attr("x", function(d) {
-                    return x(d.x);
-                });
-
-                t.selectAll(".column").delay(function(d, i) {
-                    return x(i) * 4;
-                }).attr("transform", function(d, i) {
-                    return "translate(" + x(i) + ")rotate(-90)";
-                });
-            }
         });
+    });
+	
+ 	// Convert links to matrix;
+    var zMax = 1;
+    graph.links.forEach(function(link) {
+    	matrix[link.source][link.target].z = link.value;
+    	matrix[link.source][link.target].probability = link.probability;
+    	nodes[link.source].count += link.value;
+        nodes[link.target].count += link.value;
+        zMax = Math.max(zMax, link.value);
+    });
+    
+ 	// Precompute the orders.
+    var orders = {
+        name: d3.range(n).sort(
+            function(a, b) {
+                return d3.ascending(nodes[a].name,
+                    nodes[b].name);
+            }),
+        count: d3.range(n).sort(function(a, b) {
+            return nodes[b].count - nodes[a].count;
+        })
+    };
+
+    // The default sort order.
+    x.domain(orders.name);
+    
+    svg.append("rect")
+		.attr("class", "background")
+		.attr("width", width)
+		.attr("height", height);
+
+	var row = svg.selectAll(".row").data(matrix).enter()
+    	.append("g")
+    	.attr("class", "row")
+    	.attr("transform",
+        	function(d, i) {
+            	return "translate(0," + x(i) + ")";
+        	}).each(setupAggregateRow);
+
+	row.append("line")
+		.attr("x2", width);
+
+	row.append("text")
+		.attr("font-size", "12px")
+		.attr("x", -6)
+		.attr("y", x.rangeBand() / 2)
+		.attr("dy", ".32em")
+		.attr("text-anchor", "end").text(function(d, i) {
+    		return nodes[i].name;
+		});
+	
+	var column = svg.selectAll(".column").data(matrix)
+    	.enter().append("g")
+    	.attr("class", "column")
+    	.attr("transform",
+        	function(d, i) {
+            	return "translate(" + x(i) + ")rotate(-90)";
+        	});
+
+	column.append("line")
+		.attr("x1", -width);
+
+	column.append("text")
+		.attr("font-size", "12px")
+		.attr("x", 6)
+		.attr("y", x.rangeBand() / 2)
+		.attr("dy", ".32em")
+		.attr("text-anchor", "start").text(function(d, i) {
+    		return nodes[i].name;
+		});
+	
+	function setupAggregateRow(row) {
+        var cell = d3
+            .select(this)
+            .selectAll(".cell")
+            .data(row.filter(function(d) {
+                return d.z;
+            }))
+            .enter()
+            .append("rect")
+            .attr("class", "cell")
+            .attr("x", function(d) {
+                return x(d.x);
+            })
+            .attr("width", x.rangeBand())
+            .attr("height", x.rangeBand())
+            .style("fill-opacity", function(d) {
+            	return d.z / zMax;
+            })
+            .style(
+                "fill",
+                function(d) {
+                    return nodes[d.x].group == nodes[d.y].group ? c(nodes[d.x].group) : null;
+                }).on("mouseover", mouseover).on(
+                "mouseout", mouseout);
+    }
+	
+	function mouseover(p) {
+        d3.selectAll(".row text").classed("active",
+            function(d, i) {
+                return i == p.y;
+            });
+        d3.selectAll(".column text").classed("active",
+            function(d, i) {
+                return i == p.x;
+            });
+        tooltip.transition()		
+        	.duration(200)		
+        	.style("opacity", .9);
+        tooltip.html("Count: " + p.z + "<br/>" + "Final Probability: " + p.probability)	
+        	.style("left", (d3.event.pageX) + "px")		
+        	.style("top", (d3.event.pageY - 28) + "px");
+    }
+
+    function mouseout() {
+        d3.selectAll("text").classed("active", false);
+        tooltip.transition()		
+        	.duration(500)		
+        	.style("opacity", 0);
+    }
+}
+
+function refreshConfusionMatrix(model, element) {
+	var graph = model.quality;
+	var margin = {
+	        top: 240,
+	        right: 0,
+	        bottom: 80,
+	        left: 240
+	    },
+	    width = 640,
+	    height = 640;
+
+	var x = d3.scale.ordinal().rangeBands([0, width]),
+	    z = d3.scale.linear()
+	    .domain([0, 4]).clamp(true),
+	    c = d3.scale.category10().domain(
+	        d3.range(10));
+	
+	var svg = d3.select(element).append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom).style("margin-left", -margin.left + "px").append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");		
+	
+	var matrix = [],
+    	nodes = graph.nodes,
+    	n = nodes.length;
+	
+	// Compute index per node.
+    nodes.forEach(function(node, i) {
+        node.index = i;
+        node.count = 0;
+        matrix[i] = d3.range(n).map(function(j) {
+            return {
+                x: j,
+                y: i,
+                z: 0
+            };
+        });
+    });
+	
+ 	// Convert links to matrix;    
+    graph.links.forEach(function(link) {
+    	matrix[link.source][link.target].z = link.value;    	
+    	nodes[link.source].count += link.value;
+        nodes[link.target].count += link.value;        
+    });     	
+    
+ 	// Precompute the orders.
+    var orders = {
+        name: d3.range(n).sort(
+            function(a, b) {
+                return d3.ascending(nodes[a].name,
+                    nodes[b].name);
+            }),
+        count: d3.range(n).sort(function(a, b) {
+            return nodes[b].count - nodes[a].count;
+        })
+    };
+    
+ 	// The default sort order.
+    x.domain(orders.name)
+    
+    svg.append("rect")
+		.attr("class", "background")
+		.attr("width", width)
+		.attr("height", height);
+
+	var row = svg.selectAll(".row").data(matrix).enter()
+    	.append("g")
+    	.attr("class", "row")
+    	.attr("transform",
+        	function(d, i) {
+            	return "translate(0," + x(i) + ")";
+        	}).each(setupQualityRow);
+
+	row.append("text")
+		.attr("font-size", "12px")
+		.attr("x", -6)
+		.attr("y", x.rangeBand() / 2)
+		.attr("dy", ".32em")
+		.attr("text-anchor", "end").text(function(d, i) {
+    		return nodes[i].name;
+		});
+	
+	var column = svg.selectAll(".column").data(matrix)
+    	.enter().append("g")
+    	.attr("class", "column")
+    	.attr("transform",
+        	function(d, i) {
+            	return "translate(" + x(i) + ")rotate(-90)";
+        	});
+
+	column.append("text")
+		.attr("font-size", "12px")
+		.attr("x", 6)
+		.attr("y", x.rangeBand() / 2)
+		.attr("dy", ".32em")
+		.attr("text-anchor", "start").text(function(d, i) {
+    		return nodes[i].name;
+		});
+	
+	function setupQualityRow(row) {
+    	var cell = d3
+	        .select(this)
+	        .selectAll(".cell")
+	        .data(row)
+	        .enter()
+	        .append("text")
+	        .attr("font-size", "12px")
+	        .attr("transform",
+	    		function(d, i) {
+	        		return "translate(" + x(i) + ")";
+	    	})
+	    	.style("fill", function(d) {
+	        	return (d.x == d.y ? "#5cb85c" : "#d9534f");
+	        })
+	        .style("font-weight", function(d) {
+	        	return (d.x == d.y ? "bold" : "");
+	        })
+	        .attr("x", x.rangeBand() / 2) 
+	    	.attr("y", x.rangeBand() / 2)
+	    	.attr("dy", ".32em")
+	    	.attr("text-anchor", "middle").text(function(d, i) {
+	    		return d.z;
+			});
+    		
+    		d3
+	        .select(this)
+	        .selectAll(".cell")
+	        .data(row)
+	        .enter()
+	        .append("rect")
+	        .attr("class", "cell")
+	        .attr("x", function(d) {
+	            return x(d.x);
+	        })
+	        .attr("width", x.rangeBand())
+	        .attr("height", x.rangeBand())
+	        .style("fill-opacity", 0.1)
+	        .style("fill", "#efefef");
+    }
+}
+</script>
+
+<script>
+refreshAll('<%= model %>', '#aggregate', '#quality');
 </script>
 </html>

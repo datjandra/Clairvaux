@@ -124,6 +124,12 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 	
 	public void dumpJsonGraph(Writer writer) throws JsonGenerationException, JsonMappingException, IOException {
 		GraphModel graphModel = new GraphModel();
+		graphModel.setCorrect(confusionMatrix.getCorrect());
+		graphModel.setPredicted(confusionMatrix.getPredicted());
+		graphModel.setTotal(confusionMatrix.getTotal());
+		graphModel.setAccuracy(confusionMatrix.getAccuracy());
+		graphModel.setPredictionMatrix(confusionMatrix.getPredictionMatrix());		
+		
 		Set<Entry<Pair<String,String>, Integer>> entries = mutualCounts.entrySet();
 		for (Entry<Pair<String,String>, Integer> entry : entries) {
 			Pair<String,String> edge = entry.getKey();
@@ -131,8 +137,8 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 			String target = edge.getSecond();
 			Integer count = entry.getValue();
 			graphModel.addOccurence(source, target, count);
-			graphModel.addProb(source, target, finalProbDist.get(source, target));
-		}
+			graphModel.addProb(source, target, finalProbDist.get(source, target));				
+		}		
 		
 		ObjectMapper mapper = new ObjectMapper();
 		SimpleModule module = new SimpleModule();
@@ -151,5 +157,9 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 	
 	public ConfusionMatrix getConfusionMatrix() {
 		return confusionMatrix;
+	}
+	
+	public TwoKeyHashMap<String,String,Integer> getMutualCounts() {
+		return mutualCounts;
 	}
 }

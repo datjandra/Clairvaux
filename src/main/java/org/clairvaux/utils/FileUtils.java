@@ -7,6 +7,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -88,5 +90,20 @@ public class FileUtils {
 			} catch (Exception e) {}
 		}
 		return extractedFile;
+	}
+	
+	public static File[] filesByLastModified(String dirName) {
+		File dir = new File(dirName);
+		return filesByLastModified(dir);
+	}
+	
+	public static File[] filesByLastModified(File dir) {
+		File[] files = dir.listFiles();
+		Arrays.sort(files, new Comparator<File>() {
+		    public int compare(File first, File second) {
+		        return -Long.compare(first.lastModified(), second.lastModified());
+		    }
+		});
+		return files;
 	}
 }

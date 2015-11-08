@@ -2,9 +2,7 @@ package org.clairvaux.numenta.prediction;
 
 import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
 
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,24 +15,14 @@ import junit.framework.TestSuite;
 
 import org.clairvaux.utils.NetworkUtils;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
-import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
-import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.MultiEncoder;
-import org.numenta.nupic.encoders.SDRCategoryEncoder;
 import org.numenta.nupic.network.Network;
 
-import com.opencsv.CSVReader;
-
-/**
- * Unit test for simple App.
- */
 public class NetworkConfigTest extends TestCase {
 			
 	private final static Logger LOGGER = Logger.getLogger(NetworkConfigTest.class.getName());
@@ -99,23 +87,9 @@ public class NetworkConfigTest extends TestCase {
 	}
 	
 	public void testEventsPrediction() throws InterruptedException, IOException {
-		Parameters parameters = NetworkUtils.getNetworkHarnessParameters();
-		parameters = parameters.union(NetworkUtils.getSwarmParameters());
-		
-		Map<String, Object> params = new HashMap<String, Object>();
-        params.put(KEY_MODE, Mode.PURE);
-        
-        Network network = Network.create("Network Prediction", parameters)
-			    .add(Network.createRegion("r1")
-			        .add(Network.createLayer("l1", parameters)
-			            .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
-			            .add(Anomaly.create(params))
-			            .add(new TemporalMemory())
-			            .add(new SpatialPooler())
-			            .add(initEncoder())));               
-        
+		Network network = NetworkUtils.createSimpleNetwork();                      
         // Train on a monthly file
-        List<Map<String, Object>> trainingData = loadData("data/ACLED-All-Africa-File_20150701-to-20150731_csv.csv");
+        List<Map<String, Object>> trainingData = NetworkUtils.loadAcledData("data/ACLED All Africa File_January 2015.csv", null);
         long startTime = System.nanoTime();
         DateTime lastEventDate = null;
         final int TRAINING_CYCLES = 50;
@@ -136,7 +110,7 @@ public class NetworkConfigTest extends TestCase {
         
         // Test on a monthly file other than the one used for training
         startTime = System.nanoTime();
-        List<Map<String, Object>> testingData = loadData("data/ACLED-All-Africa-File_20150801-to-20150831_csv.csv");
+        List<Map<String, Object>> testingData = NetworkUtils.loadAcledData("data/ACLED-All-Africa-File_20150701-to-20150731_csv.csv", null);
         AggregateSubscriber subscriber = new AggregateSubscriber("EVENT_TYPE", new String[]{});
         network.observe().subscribe(subscriber);        
         network.setLearn(false);
@@ -152,69 +126,5 @@ public class NetworkConfigTest extends TestCase {
         LOGGER.log(Level.INFO, "Accuracy: " + accuracy);
         // 40% accuracy at least with this train/test set
         assertTrue(accuracy > 0.4d);
-	}
-
-	MultiEncoder initEncoder() {
-		MultiEncoder multiEncoder = MultiEncoder.builder()
-				.name("")
-				.build();
-		
-		DateEncoder dateEncoder = DateEncoder.builder()
-				.timeOfDay(21, 1)
-				.dayOfWeek(21, 1)
-				.weekend(21)
-				.forced(true)
-				.build();
-		multiEncoder.addEncoder("EVENT_DATE", dateEncoder);
-		
-		SDRCategoryEncoder sdrCategoryEncoder = SDRCategoryEncoder.builder()
-                .n(121)
-                .w(21)                                
-                .forced(true)
-                .build();
-		multiEncoder.addEncoder("EVENT_TYPE", sdrCategoryEncoder);		
-		
-		sdrCategoryEncoder = SDRCategoryEncoder.builder()
-				.n(121)
-				.w(21)				
-				.forced(true)
-				.build();
-		multiEncoder.addEncoder("INTERACTION", sdrCategoryEncoder);
-				
-		sdrCategoryEncoder = SDRCategoryEncoder.builder()
-				.n(121)
-				.w(21)				
-				.forced(true)
-				.build();
-		multiEncoder.addEncoder("LOCATION", sdrCategoryEncoder);
-		return multiEncoder;
-	}
-		
-	static List<Map<String,Object>> loadData(String file) {
-		CSVReader reader = null;
-        List<Map<String, Object>> data = new ArrayList<Map<String,Object>>();
-		try {
-			reader = new CSVReader(new FileReader(file));
-			reader.readNext();        
-			
-			DateTimeFormatter formatter = DateTimeFormat.forPattern("dd/MM/YYYY");        
-			String [] nextLine;
-			while ((nextLine = reader.readNext()) != null) {     
-				Map<String, Object> multiInput = new HashMap<>();
-				DateTime eventDate = formatter.parseDateTime(nextLine[2]);
-				multiInput.put("EVENT_DATE", eventDate);        	
-				multiInput.put("EVENT_TYPE", nextLine[5]);
-				multiInput.put("INTERACTION", nextLine[12]);	        	        	
-				multiInput.put("LOCATION", nextLine[17]);        	
-				data.add(multiInput);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				reader.close();
-			} catch (Exception e) {}
-		}
-        return data;
-	}
+	}			
 }
