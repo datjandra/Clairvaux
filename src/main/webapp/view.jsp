@@ -362,9 +362,7 @@ function refreshAggregateMatrix(model, element) {
         var cell = d3
             .select(this)
             .selectAll(".cell")
-            .data(row.filter(function(d) {
-                return d.z;
-            }))
+            .data(row)
             .enter()
             .append("rect")
             .attr("class", "cell")

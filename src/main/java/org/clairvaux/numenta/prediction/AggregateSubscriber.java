@@ -130,14 +130,17 @@ public class AggregateSubscriber extends Subscriber<Inference> {
 		graphModel.setAccuracy(confusionMatrix.getAccuracy());
 		graphModel.setPredictionMatrix(confusionMatrix.getPredictionMatrix());		
 		
-		Set<Entry<Pair<String,String>, Integer>> entries = mutualCounts.entrySet();
-		for (Entry<Pair<String,String>, Integer> entry : entries) {
+		Set<Entry<Pair<String,String>, Double>> entries = finalProbDist.entrySet();
+		for (Entry<Pair<String,String>, Double> entry : entries) {
 			Pair<String,String> edge = entry.getKey();
 			String source = edge.getFirst();
 			String target = edge.getSecond();
-			Integer count = entry.getValue();
+			Integer count = mutualCounts.get(source, target);
+			if (count == null) {
+				count = 0;
+			}
 			graphModel.addOccurence(source, target, count);
-			graphModel.addProb(source, target, finalProbDist.get(source, target));				
+			graphModel.addProb(source, target, entry.getValue());				
 		}		
 		
 		ObjectMapper mapper = new ObjectMapper();
