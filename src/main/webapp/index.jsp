@@ -4,9 +4,15 @@
 <%@page import="java.util.List"%>
 <%@page import="org.clairvaux.utils.FileUtils"%>
 <% 
-	String root = application.getRealPath("/");
-	File modelDir = new File(root, "/data/models");
-	List<String> modelFileNames = FileUtils.getFileNames(modelDir.getAbsolutePath());	
+	List<String> modelFileNames = null;
+	try {
+		String root = application.getRealPath("/");
+		File modelDir = new File(root, "/data/models");
+		if (!modelDir.exists()) {
+			modelDir.mkdirs();
+		}
+		modelFileNames = FileUtils.getFileNames(modelDir.getAbsolutePath());	
+	} catch (Exception e) {}
 %>    
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
