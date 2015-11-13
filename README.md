@@ -49,10 +49,13 @@ This property sets the number of training cycles when the HTM is in learning mod
 If using Tomcat as servlet engine, the property may be set at environment level without modifying configuration files.
 Examples for Windows and Unix/Linux systems: 
 
+```
 set CATALINA_OPTS="-DCLAIRVAUX_TRAINING_CYCLES=100"
 export CATALINA_OPTS="-DCLAIRVAUX_TRAINING_CYCLES=100"
-
+```
 
 ## References
+```
 Raleigh, Clionadh, Andrew Linke, Håvard Hegre and Joakim Karlsen. 2010. Introducing ACLED-Armed Conflict Location and Event Data. Journal of Peace Research 47(5) 651-660.
 http://numenta.com/learn/hierarchical-temporal-memory-white-paper.html
+```
