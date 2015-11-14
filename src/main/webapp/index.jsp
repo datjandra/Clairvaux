@@ -109,7 +109,7 @@ body {
  				<ol>
  					<li>
  					Download realtime <a href="http://www.acleddata.com/data/">data</a> in CSV format from ACLED<sup><a href="#citation_1">1</a></sup>.
- 					Uploading monthly data is recommended.
+ 					Monthly data should be uploaded in temporal order, starting from January, February, and so on.
  					Uploading all-inclusive data which dates back to 1997 is not needed.
  					The system is designed to learn incrementally from smaller chunks of data.
  					</li>

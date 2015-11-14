@@ -44,9 +44,16 @@ When a previously learned file is uploaded again, the HTM makes predictions but 
 When the very first file is uploaded, prediction accuracy is about 10-15 percent, as HTM has no prior information.
 After 2-3 uploads, accuracy goes up to about 30 percent.
 After >3 uploads accuracy may increase to about 40 percent.
-It's not yet known whether prediction accuracy will significantly exceed 40 percent with additional uploads.
-Most correct predictions converge to "Battle-No change of territory" and "Riots/Protests" events, as they are much more frequent than others.
-Predictions for the other event types should improve with more observations of their occurrence.
+
+The three most frequent events observed so far are:
+
+1. Riots/Protests - public demonstration that could be non-violent (protest) or violent (rioting).
+2. Battle-No change of territory - violent confrontation between two armed groups without change in contested location.
+3. Violence against civilians - attack by armed groups against civilians.
+
+HTM can predict "Riots/Protests" event quite well due to its high count in the data.
+Lower accuracy for other event types is due to lower counts.
+As more event types are observed, prediction accuracy against them will gradually improve. 
 
 
 ## Build and Deployment
@@ -62,6 +69,7 @@ Examples for Windows and Unix/Linux systems:
 set CATALINA_OPTS="-DCLAIRVAUX_TRAINING_CYCLES=100"
 export CATALINA_OPTS="-DCLAIRVAUX_TRAINING_CYCLES=100"
 ```
+
 
 ## References
 ```
