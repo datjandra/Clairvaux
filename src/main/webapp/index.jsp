@@ -144,6 +144,7 @@ body {
 			The current system will learn sequence of events per country.
 			Other context fields may be used such as learning events per actor, for example.
 			In that case, data file should be re-sorted by the context field (actor, city, etc.), then by ascending date.
+			Java code change is also required to call network reset when the context field changes value.
 			These are the current inputs to the HTM engine:
   			</div>
   			<ol>

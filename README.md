@@ -18,13 +18,13 @@ ACLED data files are sorted by GWNO (numeric code for each country), then by asc
 The current system will then learn sequence of events per country.
 Other context fields may be used to such as learning events per actor, for example.
 In that case, data file should be re-sorted by the context field (actor, city, etc.), then by ascending date.
+Java code change is also required to call network reset when the context field changes value.
 These are the current inputs to the HTM engine:
 
 1. GWNO - country code, not encoded and used to reset event sequences
 2. Event Date - day of the event encoded as date
 3. Event type - type of conflict event, encoded as category
 4. Interaction - code to indicate interaction between actors involved in the event, encoded as category
-
 
 
 ## Technical Description
@@ -39,7 +39,7 @@ When a new file is encountered, the HTM learns from the input data and simultane
 When a previously learned file is uploaded again, the HTM makes predictions but learning is disabled.
 
 
-## Experimental Results
+## Results
 
 When the very first file is uploaded, prediction accuracy is about 10-15 percent, as HTM has no prior information.
 After 2-3 uploads, accuracy goes up to about 30 percent.

@@ -212,6 +212,7 @@ public class NetworkUtils {
 			 * The system will then learn sequence of events per country.
 			 * Other context fields may be used like events per actor, events per city, etc.
 			 * Data file will have to be re-sorted by context field (actor, city, etc.), then by ascending date.
+			 * Change to ConflictPredictionEngine.java is also required to call network reset when field's value change.
 			 */
 			while ((nextLine = reader.readNext()) != null) {     
 				Map<String, Object> multiInput = new HashMap<>();

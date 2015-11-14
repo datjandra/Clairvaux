@@ -44,6 +44,10 @@ public enum ConflictPredictionEngine {
 			String lastGwno = null;
 			for (int i = 0; i < trainingCycles; i++) {
 				for (Map<String, Object> multiInput : data) {
+					/*
+					 * HTM is currently learning sequence of events per GWNO (country code).
+					 * To learn sequences for a different field, input the data and call reset in similar manner.
+					 */
 					String gwno = multiInput.get("GWNO").toString();
 					if (lastGwno != null
 							&& !lastGwno.equals(gwno)) {
