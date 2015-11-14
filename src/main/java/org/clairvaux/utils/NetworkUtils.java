@@ -126,7 +126,6 @@ public class NetworkUtils {
 	
 	// Obtained by running large swarm with 1-step prediction for EVENT_TYPE
 	public static Parameters getSwarmParameters() {
-		Map<String, Map<String, Object>> fieldEncodings = getAcledEncodingMap();
 		Parameters p = Parameters.getEncoderDefaultParameters();
 		
 		// Universal params
@@ -154,7 +153,6 @@ public class NetworkUtils {
 		p.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 16);
 
 		p.setParameterByKey(KEY.CLIP_INPUT, true);
-		p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
 		return p;
 	}	
 	
@@ -176,8 +174,8 @@ public class NetworkUtils {
                 .w(21)                                
                 .forced(true)
                 .build();
-		multiEncoder.addEncoder("EVENT_TYPE", sdrCategoryEncoder);		
-		
+		multiEncoder.addEncoder("EVENT_TYPE", sdrCategoryEncoder);	
+
 		sdrCategoryEncoder = SDRCategoryEncoder.builder()
 				.n(121)
 				.w(21)				
@@ -185,12 +183,14 @@ public class NetworkUtils {
 				.build();
 		multiEncoder.addEncoder("INTERACTION", sdrCategoryEncoder);
 				
+		/*
 		sdrCategoryEncoder = SDRCategoryEncoder.builder()
 				.n(121)
 				.w(21)				
 				.forced(true)
 				.build();
 		multiEncoder.addEncoder("LOCATION", sdrCategoryEncoder);
+		*/
 		return multiEncoder;
 	}
 	
@@ -206,21 +206,32 @@ public class NetworkUtils {
 			
 			DateTimeFormatter formatter = DateTimeFormat.forPattern(dateFormat);        
 			String [] nextLine;
+			
+			/*
+			 * Data files are sorted by GWNO (numeric code for each country), then by ascending date.
+			 * The system will then learn sequence of events per country.
+			 * Other context fields may be used like events per actor, events per city, etc.
+			 * Data file will have to be re-sorted by context field (actor, city, etc.), then by ascending date.
+			 */
 			while ((nextLine = reader.readNext()) != null) {     
 				Map<String, Object> multiInput = new HashMap<>();
 				try {
 					DateTime eventDate = formatter.parseDateTime(nextLine[2]);
+					multiInput.put("GWNO", nextLine[0]);	// Used only for sequence reset    
 					multiInput.put("EVENT_DATE", eventDate);        	
 					multiInput.put("EVENT_TYPE", nextLine[5].trim().toUpperCase());
-					multiInput.put("INTERACTION", nextLine[12].trim());	        	        	
+					multiInput.put("INTERACTION", nextLine[12].trim());	   
+					
+					/*     	        	
 					multiInput.put("LOCATION", nextLine[17].trim().toUpperCase());
+					*/
 					data.add(multiInput);
 				} catch (IllegalFieldValueException e) {
 					LOGGER.log(Level.WARNING, String.format("Skipped line with bad date format %s", Arrays.toString(nextLine)));
 				}        					
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.INFO, e.getMessage(), e);
 		} finally {
 			try {
 				reader.close();
@@ -229,6 +240,8 @@ public class NetworkUtils {
         return data;
 	}
 			
+	// Not needed if sensor is not used
+	@SuppressWarnings("unused")
 	private static Map<String, Map<String, Object>> getAcledEncodingMap() {
         Map<String, Map<String, Object>> fieldEncodings = setupMap(
                 null,

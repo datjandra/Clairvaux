@@ -138,12 +138,19 @@ body {
   	<div class="row">
   		<div class="col-md-6">
   			<h4>Data Description</h4>
-  			<div>The prediction engine uses the fields listed below. Refer to ACLED site for details about them.</div>
+  			<div>
+  			This application attempts to predict one of nine event types coded by ACLED, such as "Battle-No change of territory" or "Riots/Protests".
+			Data files are sorted by GWNO (numeric code for each country), then by ascending date.
+			The current system will learn sequence of events per country.
+			Other context fields may be used such as learning events per actor, for example.
+			In that case, data file should be re-sorted by the context field (actor, city, etc.), then by ascending date.
+			These are the current inputs to the HTM engine:
+  			</div>
   			<ol>
-  			<li>Event Date - day of the event</li>
-  			<li>Event Type - a politically violent event</li>
-  			<li>Interaction - code to represent interactions between groups involved in the event</li>
-  			<li>Location - most specific location for the event </li>
+  			<li>GWNO - country code, not encoded and used to reset event sequences</li>
+  			<li>Event Date - day of the event encoded as date</li>
+  			<li>Event type - type of conflict event, encoded as category</li>
+  			<li>Interaction - code to indicate interaction between actors involved in the event, encoded as category</li>
   			</ol>
   		</div>
   		<div class="col-md-6">

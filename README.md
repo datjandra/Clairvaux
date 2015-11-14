@@ -14,11 +14,15 @@ A secondary motivation is to explore techniques for categorical prediction and p
 ## Data Description
 
 This application attempts to predict one of nine event types coded by ACLED, such as "Battle-No change of territory" or "Riots/Protests".
-Following fields are also used as inputs for classification:
-
-1. Event Date - day of the event
-2. Interaction - code to represent interactions between groups involved in the event
-3. Location - most specific location for the event
+ACLED data files are sorted by GWNO (numeric code for each country), then by ascending date.
+The current system will then learn sequence of events per country.
+Other context fields may be used to such as learning events per actor, for example.
+In that case, data file should be re-sorted by the context field (actor, city, etc.), then by ascending date.
+These are the current inputs to the HTM engine:
+1. GWNO - country code, not encoded and used to reset event sequences
+2. Event Date - day of the event encoded as date
+3. Event type - type of conflict event, encoded as category
+4. Interaction - code to indicate interaction between actors involved in the event, encoded as category
 
 
 ## Technical Description
@@ -34,10 +38,13 @@ When a previously learned file is uploaded again, the HTM makes predictions but 
 
 
 ## Experimental Results
-When the very first file is uploaded, prediction accuracy is about 10-15 percent.
+
+When the very first file is uploaded, prediction accuracy is about 10-15 percent, as HTM has no prior information.
 After 2-3 uploads, accuracy goes up to about 30 percent.
 After >3 uploads accuracy may increase to about 40 percent.
 It's not yet known whether prediction accuracy will significantly exceed 40 percent with additional uploads.
+Most correct predictions converge to "Battle-No change of territory" and "Riots/Protests" events, as they are much more frequent than others.
+Predictions for the other event types should improve with more observations of their occurrence.
 
 
 ## Build and Deployment
@@ -57,5 +64,6 @@ export CATALINA_OPTS="-DCLAIRVAUX_TRAINING_CYCLES=100"
 ## References
 ```
 Raleigh, Clionadh, Andrew Linke, Håvard Hegre and Joakim Karlsen. 2010. Introducing ACLED-Armed Conflict Location and Event Data. Journal of Peace Research 47(5) 651-660.
+
 http://numenta.com/learn/hierarchical-temporal-memory-white-paper.html
 ```

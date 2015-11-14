@@ -6,7 +6,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.clairvaux.utils.NetworkUtils;
-import org.joda.time.DateTime;
 import org.numenta.nupic.network.Inference;
 import org.numenta.nupic.network.Network;
 
@@ -42,21 +41,21 @@ public enum ConflictPredictionEngine {
 				network.observe().subscribe(subscriber);
 			}
 
-			DateTime lastEventDate = null;
+			String lastGwno = null;
 			for (int i = 0; i < trainingCycles; i++) {
 				for (Map<String, Object> multiInput : data) {
-					DateTime eventDate = (DateTime) multiInput
-							.get("EVENT_DATE");
-					if (lastEventDate != null
-							&& eventDate.isBefore(lastEventDate)) {
+					String gwno = multiInput.get("GWNO").toString();
+					if (lastGwno != null
+							&& !lastGwno.equals(gwno)) {
 						network.reset();
 					}
 					network.computeImmediate(multiInput);
-					lastEventDate = eventDate;
+					lastGwno = gwno;
 				}
-				lastEventDate = null;
+				lastGwno = null;
 			}
 		}
+		data = null;
 		long endTime = System.nanoTime();
 		double duration = (endTime - startTime) / 1000000000.0;
 		LOGGER.log(Level.INFO, String.format(
