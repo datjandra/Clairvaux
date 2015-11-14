@@ -20,7 +20,6 @@ Other context fields may be used to such as learning events per actor, for examp
 In that case, data file should be re-sorted by the context field (actor, city, etc.), then by ascending date.
 These are the current inputs to the HTM engine:
 
-
 1. GWNO - country code, not encoded and used to reset event sequences
 2. Event Date - day of the event encoded as date
 3. Event type - type of conflict event, encoded as category
